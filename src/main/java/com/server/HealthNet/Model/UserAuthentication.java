@@ -7,13 +7,6 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToOne;
 
-
-enum Role{
-    PATIENT,
-    DOCTOR,
-    STAFF
-}
-
 @Entity
 public class UserAuthentication {
     public UserAuthentication() {

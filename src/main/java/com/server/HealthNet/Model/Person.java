@@ -1,7 +1,11 @@
 package com.server.HealthNet.Model;
 
 import java.time.LocalDate;
+import java.util.Arrays;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -21,10 +25,21 @@ public class Person {
     
 
 
-    public Person(byte[] image, String image_tyoe, String name, String gender, Integer age, LocalDate birthdate,
-            String contact_info, String address, UserAuthentication userAuthentication) {
+    @Override
+    public String toString() {
+        return "Person [person_id=" + person_id + ", image=" + Arrays.toString(image) + ", image_type=" + image_type
+                + ", name=" + name + ", gender=" + gender + ", age=" + age + ", birthdate=" + birthdate
+                + ", contact_info=" + contact_info + ", address=" + address + ", userAuthentication="
+                + userAuthentication + "]";
+    }
+
+
+
+
+    public Person(byte[] image, String image_type, String name, String gender, Integer age, LocalDate birthdate,
+        String contact_info, String address, UserAuthentication userAuthentication) {
         this.image = image;
-        this.image_tyoe = image_tyoe;
+        this.image_type = image_type;
         this.name = name;
         this.gender = gender;
         this.age = age;
@@ -42,7 +57,7 @@ public class Person {
     private Long person_id;
     @Lob
     private byte[] image;
-    private String image_tyoe;
+    private String image_type;
     
     private String name;
     private String gender;
@@ -50,7 +65,8 @@ public class Person {
     private LocalDate birthdate;
     private String contact_info;
     private String address;
-    @OneToOne(mappedBy = "person")
+    @OneToOne(mappedBy = "person", cascade = CascadeType.ALL)
+    @JsonBackReference
     private UserAuthentication userAuthentication;
     
     public UserAuthentication getUserAuthentication() {
@@ -61,11 +77,11 @@ public class Person {
         this.userAuthentication = userAuthentication;
     }
 
-    public String getImage_tyoe() {
-        return image_tyoe;
+    public String getImage_type() {
+        return image_type;
     }
-    public void setImage_tyoe(String image_tyoe) {
-        this.image_tyoe = image_tyoe;
+    public void setImage_type(String image_type) {
+        this.image_type = image_type;
     }
     public Long getId() {
         return person_id;
