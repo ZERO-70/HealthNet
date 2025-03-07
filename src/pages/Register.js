@@ -1,15 +1,17 @@
 import React, { useState } from 'react';
-import '../styles/RegisterStaff.css'; // Optional: Include your custom CSS styles for better UI
+import { useNavigate } from 'react-router-dom'; // Import useNavigate
 
-function AddStaff() {
+function Register() {
+    const [userType, setUserType] = useState(''); // To track if the user is a patient or doctor
     const [formData, setFormData] = useState({});
-    const [imageBase64, setImageBase64] = useState('');
+    const [imageBase64, setImageBase64] = useState(''); // To store Base64 encoded image
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [responseMessage, setResponseMessage] = useState('');
     const [errorMessage, setErrorMessage] = useState('');
+    const navigate = useNavigate(); // Initialize useNavigate for redirection
 
-    // Handle input changes
+    // Handle form field changes
     const handleChange = (e) => {
         setFormData({
             ...formData,
@@ -17,13 +19,13 @@ function AddStaff() {
         });
     };
 
-    // Handle image upload and convert it to Base64
+    // Handle image upload and convert to Base64
     const handleImageUpload = (e) => {
         const file = e.target.files[0];
         const reader = new FileReader();
 
         reader.onloadend = () => {
-            setImageBase64(reader.result.split(',')[1]); // Extract Base64 string
+            setImageBase64(reader.result.split(',')[1]); // Extract Base64 data
         };
 
         if (file) {
@@ -31,69 +33,42 @@ function AddStaff() {
         }
     };
 
-    // Check if username is available
-    const checkUsernameAvailability = async (username) => {
-        try {
-            const response = await fetch(
-                `https://frozen-sands-51239-b849a8d5756e.herokuapp.com/user_authentication/exists/${username}`,
-                {
-                    method: 'GET',
-                    headers: { 'Content-Type': 'application/json' },
-                }
-            );
-
-            if (!response.ok) {
-                throw new Error('Error checking username availability.');
-            }
-
-            const exists = await response.json();
-            return exists;
-        } catch (error) {
-            console.error(error.message);
-            setErrorMessage('Failed to check username availability. Please try again.');
-            return true;
-        }
-    };
-
-    // Handle form submission
+    // Handle submission
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        // Check if username is available
-        const usernameExists = await checkUsernameAvailability(username);
-        if (usernameExists) {
-            setErrorMessage('Username already exists. Please choose a different username.');
-            return;
-        }
-
         try {
-            // Add image data to formData
+            // Add image data to the formData object
             const updatedFormData = { ...formData, image: imageBase64, image_type: 'jpeg' };
 
-            // First, register the staff
-            const staffResponse = await fetch('https://frozen-sands-51239-b849a8d5756e.herokuapp.com/staff', {
+            // Step 1: Send patient/doctor data
+            const baseUrl = 'https://frozen-sands-51239-b849a8d5756e.herokuapp.com';
+            const personEndpoint = userType === 'PATIENT' ? '/patient' : '/doctor';
+
+            const personResponse = await fetch(`${baseUrl}${personEndpoint}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(updatedFormData),
             });
 
-            if (!staffResponse.ok) {
-                const errorResponse = await staffResponse.text();
-                throw new Error(`Failed to register staff: ${errorResponse}`);
+            if (!personResponse.ok) {
+                const errorResponse = await personResponse.text();
+                throw new Error(`Failed to register ${userType.toLowerCase()}: ${errorResponse}`);
             }
 
-            // Get the generated staff ID
-            const staffId = parseInt(await staffResponse.text(), 10);
+            // Get personId from the response
+            const personId = parseInt(await personResponse.text(), 10);
+            console.log(`${userType} ID received:`, personId);
 
-            // Then, set up credentials
+            // Step 2: Send authentication data
             const authPayload = {
                 username,
                 password,
-                role: 'STAFF',
-                personId: staffId,
+                role: userType,
+                personId,
             };
 
-            const authResponse = await fetch('https://frozen-sands-51239-b849a8d5756e.herokuapp.com/user_authentication/register', {
+            const authResponse = await fetch(`${baseUrl}/user_authentication/register`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(authPayload),
@@ -104,13 +79,12 @@ function AddStaff() {
                 throw new Error(`Failed to register user: ${errorResponse}`);
             }
 
-            setResponseMessage('Staff registration successful!');
-            setFormData({});
-            setUsername('');
-            setPassword('');
-            setImageBase64('');
+            setResponseMessage(`Registration successful! You are now registered as a ${userType}.`);
+
+            // Redirect to the login page after successful registration
+            setTimeout(() => navigate('/'), 2000); // Redirect to login after 2 seconds
         } catch (error) {
-            console.error('Error during registration:', error.message);
+            console.error(error.message);
             setErrorMessage(error.message);
         }
     };
@@ -118,80 +92,159 @@ function AddStaff() {
     return (
         <div className="wrapper">
             <div className="container">
-                <h1 className="title">Register Staff</h1>
-                <form onSubmit={handleSubmit} className="form">
-                    <input
-                        type="file"
-                        name="image"
-                        accept="image/*"
-                        onChange={handleImageUpload}
-                        required
-                    />
-                    <input type="text" name="name" placeholder="Name" required onChange={handleChange} />
-                    <select name="gender" required onChange={handleChange}>
-                        <option value="">Select Gender</option>
-                        <option value="Male">Male</option>
-                        <option value="Female">Female</option>
-                        <option value="Other">Other</option>
-                    </select>
-                    <input
-                        type="number"
-                        name="age"
-                        placeholder="Age"
-                        required
-                        onChange={handleChange}
-                        className="fullWidthInput"
-                    />
-                    <input
-                        type="date"
-                        name="birthdate"
-                        placeholder="Birthdate"
-                        required
-                        onChange={handleChange}
-                        className="fullWidthInput"
-                    />
-                    <input
-                        type="text"
-                        name="contact_info"
-                        placeholder="Contact Info"
-                        required
-                        onChange={handleChange}
-                    />
-                    <input
-                        type="text"
-                        name="address"
-                        placeholder="Address"
-                        required
-                        onChange={handleChange}
-                    />
-                    <input
-                        type="text"
-                        name="proffession"
-                        placeholder="Profession"
-                        required
-                        onChange={handleChange}
-                    />
-                    <h3>Set up your credentials</h3>
-                    <input
-                        type="text"
-                        placeholder="Username"
-                        required
-                        value={username}
-                        onChange={(e) => setUsername(e.target.value)}
-                        className="fullWidthInput"
-                    />
-                    <input
-                        type="password"
-                        placeholder="Password"
-                        required
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        className="fullWidthInput"
-                    />
-                    <button type="submit" className="button">
-                        Register Staff
-                    </button>
-                </form>
+                <h1 className="title">Register</h1>
+                {!userType && (
+                    <div className="userTypeSelection">
+                        <p>Are you registering as a:</p>
+                        <button onClick={() => setUserType('PATIENT')} className="button">
+                            Patient
+                        </button>
+                        <button onClick={() => setUserType('DOCTOR')} className="button">
+                            Doctor
+                        </button>
+                    </div>
+                )}
+                {userType && (
+                    <form onSubmit={handleSubmit} className="form">
+                        <h2>Register as a {userType}</h2>
+                        <input
+                            type="file"
+                            name="image"
+                            accept="image/*"
+                            onChange={handleImageUpload}
+                            required
+                        />
+                        {userType === 'PATIENT' && (
+                            <>
+                                <input
+                                    type="text"
+                                    name="name"
+                                    placeholder="Name"
+                                    required
+                                    onChange={handleChange}
+                                />
+                                <input
+                                    type="text"
+                                    name="gender"
+                                    placeholder="Gender"
+                                    required
+                                    onChange={handleChange}
+                                />
+                                <input
+                                    type="number"
+                                    name="age"
+                                    placeholder="Age"
+                                    required
+                                    onChange={handleChange}
+                                />
+                                <input
+                                    type="date"
+                                    name="birthdate"
+                                    placeholder="Birthdate"
+                                    required
+                                    onChange={handleChange}
+                                />
+                                <input
+                                    type="text"
+                                    name="contact_info"
+                                    placeholder="Contact Info"
+                                    required
+                                    onChange={handleChange}
+                                />
+                                <input
+                                    type="text"
+                                    name="address"
+                                    placeholder="Address"
+                                    required
+                                    onChange={handleChange}
+                                />
+                                <input
+                                    type="text"
+                                    name="weight"
+                                    placeholder="Weight"
+                                    required
+                                    onChange={handleChange}
+                                />
+                                <input
+                                    type="text"
+                                    name="height"
+                                    placeholder="Height"
+                                    required
+                                    onChange={handleChange}
+                                />
+                            </>
+                        )}
+                        {userType === 'DOCTOR' && (
+                            <>
+                                <input
+                                    type="text"
+                                    name="name"
+                                    placeholder="Name"
+                                    required
+                                    onChange={handleChange}
+                                />
+                                <input
+                                    type="text"
+                                    name="gender"
+                                    placeholder="Gender"
+                                    required
+                                    onChange={handleChange}
+                                />
+                                <input
+                                    type="number"
+                                    name="age"
+                                    placeholder="Age"
+                                    required
+                                    onChange={handleChange}
+                                />
+                                <input
+                                    type="date"
+                                    name="birthdate"
+                                    placeholder="Birthdate"
+                                    required
+                                    onChange={handleChange}
+                                />
+                                <input
+                                    type="text"
+                                    name="contact_info"
+                                    placeholder="Contact Info"
+                                    required
+                                    onChange={handleChange}
+                                />
+                                <input
+                                    type="text"
+                                    name="address"
+                                    placeholder="Address"
+                                    required
+                                    onChange={handleChange}
+                                />
+                                <input
+                                    type="text"
+                                    name="specialization"
+                                    placeholder="Specialization"
+                                    required
+                                    onChange={handleChange}
+                                />
+                            </>
+                        )}
+                        <h3>Set up your credentials</h3>
+                        <input
+                            type="text"
+                            placeholder="Username"
+                            required
+                            value={username}
+                            onChange={(e) => setUsername(e.target.value)}
+                        />
+                        <input
+                            type="password"
+                            placeholder="Password"
+                            required
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                        />
+                        <button type="submit" className="button">Register</button>
+                    </form>
+                )}
                 {responseMessage && <p className="successMessage">{responseMessage}</p>}
                 {errorMessage && <p className="errorMessage">{errorMessage}</p>}
             </div>
@@ -199,4 +252,4 @@ function AddStaff() {
     );
 }
 
-export default AddStaff;
+export default Register;
