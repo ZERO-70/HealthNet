@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import '../styles/StaffDepartmentManagement.css';
+import LoadingSpinner from './LoadingSpinner';
 
 function StaffDepartmentManagement() {
     const [activeTab, setActiveTab] = useState('staff'); // Default tab is "staff"
@@ -13,6 +14,7 @@ function StaffDepartmentManagement() {
     const [updateDepartment, setUpdateDepartment] = useState(null);
     const [doctorList, setDoctorList] = useState([]); // For doctors
     const [patientList, setPatientList] = useState([]); // For patients
+    const [loading, setLoading] = useState(false);
 
     const [newStaff, setNewStaff] = useState({
         name: '',
@@ -37,6 +39,7 @@ function StaffDepartmentManagement() {
     }, []);
 
     const fetchStaff = async () => {
+        setLoading(true);
         try {
             const token = localStorage.getItem('authToken');
             const response = await fetch('https://frozen-sands-51239-b849a8d5756e.herokuapp.com/staff', {
@@ -55,10 +58,13 @@ function StaffDepartmentManagement() {
             setStaffList(data);
         } catch (error) {
             setErrorMessage('Error fetching staff data: ' + error.message);
+        } finally {
+            setLoading(false);
         }
     };
 
     const fetchDepartments = async () => {
+        setLoading(true);
         try {
             const token = localStorage.getItem('authToken');
             const response = await fetch('https://frozen-sands-51239-b849a8d5756e.herokuapp.com/department', {
@@ -77,10 +83,13 @@ function StaffDepartmentManagement() {
             setDepartmentList(data);
         } catch (error) {
             setErrorMessage('Error fetching department data: ' + error.message);
+        } finally {
+            setLoading(false);
         }
     };
 
     const fetchDoctors = async () => {
+        setLoading(true);
         try {
             const token = localStorage.getItem('authToken');
             const response = await fetch('https://frozen-sands-51239-b849a8d5756e.herokuapp.com/doctor', {
@@ -96,10 +105,13 @@ function StaffDepartmentManagement() {
             setDoctorList(data);
         } catch (error) {
             setErrorMessage('Error fetching doctor data: ' + error.message);
+        } finally {
+            setLoading(false);
         }
     };
 
     const fetchPatients = async () => {
+        setLoading(true);
         try {
             const token = localStorage.getItem('authToken');
             const response = await fetch('https://frozen-sands-51239-b849a8d5756e.herokuapp.com/patient', {
@@ -115,10 +127,13 @@ function StaffDepartmentManagement() {
             setPatientList(data);
         } catch (error) {
             setErrorMessage('Error fetching patient data: ' + error.message);
+        } finally {
+            setLoading(false);
         }
     };
 
     const deleteItem = async (type, id) => {
+        setLoading(true);
         try {
             const token = localStorage.getItem('authToken');
 
@@ -161,6 +176,8 @@ function StaffDepartmentManagement() {
         } catch (error) {
             console.error(`Error deleting ${type} with ID: ${id}`, error.message);
             setErrorMessage(`Error deleting ${type}: ${error.message}`);
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -182,6 +199,7 @@ function StaffDepartmentManagement() {
     };
 
     const addStaff = async () => {
+        setLoading(true);
         try {
             const token = localStorage.getItem('authToken');
             const staffPayload = { ...newStaff };
@@ -214,10 +232,13 @@ function StaffDepartmentManagement() {
         } catch (error) {
             console.error('Error adding staff:', error.message);
             setErrorMessage('Error adding staff: ' + error.message);
+        } finally {
+            setLoading(false);
         }
     };
 
     const addDepartment = async () => {
+        setLoading(true);
         try {
             const token = localStorage.getItem('authToken');
             const response = await fetch('https://frozen-sands-51239-b849a8d5756e.herokuapp.com/department', {
@@ -237,10 +258,13 @@ function StaffDepartmentManagement() {
             fetchDepartments();
         } catch (error) {
             setErrorMessage('Error adding department: ' + error.message);
+        } finally {
+            setLoading(false);
         }
     };
 
     const updateStaffDetails = async () => {
+        setLoading(true);
         try {
             const token = localStorage.getItem('authToken');
             console.log(newStaff);
@@ -264,10 +288,13 @@ function StaffDepartmentManagement() {
             fetchStaff();
         } catch (error) {
             setErrorMessage('Error updating staff: ' + error.message);
+        } finally {
+            setLoading(false);
         }
     };
 
     const updateDepartmentDetails = async () => {
+        setLoading(true);
         try {
             const token = localStorage.getItem('authToken');
             const response = await fetch(
@@ -290,6 +317,8 @@ function StaffDepartmentManagement() {
             fetchDepartments();
         } catch (error) {
             setErrorMessage('Error updating department: ' + error.message);
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -404,6 +433,7 @@ function StaffDepartmentManagement() {
     };
 
     const addAuthentication = async (username, password, personId) => {
+        setLoading(true);
         try {
             const token = localStorage.getItem('authToken'); // Retrieve the auth token
             const authPayload = {
@@ -432,10 +462,13 @@ function StaffDepartmentManagement() {
         } catch (error) {
             console.error('Error adding user authentication:', error.message);
             throw error; // Stop further execution if authentication fails
+        } finally {
+            setLoading(false);
         }
     };
 
     const deleteAuthentication = async (id) => {
+        setLoading(true);
         try {
             const token = localStorage.getItem('authToken');
             console.log(`Sending DELETE request to delete authentication for ID: ${id}`);
@@ -456,11 +489,14 @@ function StaffDepartmentManagement() {
         } catch (error) {
             console.error(`Error deleting authentication for ID: ${id}`, error.message);
             throw error; // Re-throw to stop further execution in `deleteItem`
+        } finally {
+            setLoading(false);
         }
     };
 
     return (
         <div className="manageInventory">
+            {loading && <LoadingSpinner />}
             <h1 className="inventoryTitle">Management</h1>
             <div className="actionButtons">
                 <button className="createButton" onClick={() => setShowStaffModal(true)}>

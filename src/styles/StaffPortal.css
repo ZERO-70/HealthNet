@@ -10,6 +10,13 @@
     animation: fadeInPage 1s ease-in;
 }
 
+.portalHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
 .tabNavigation {
     display: flex;
     justify-content: center;
@@ -60,6 +67,30 @@
     /* White background for content */
     box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
     animation: slideIn 0.5s ease-in-out;
+}
+
+.logoutButton {
+    background-color: #e74c3c;
+    color: white;
+    padding: 8px 15px;
+    border: none;
+    border-radius: 5px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.3s, transform 0.2s;
+}
+
+.logoutButton:hover {
+    background-color: #c0392b;
+    transform: translateY(-2px);
+}
+
+.fixedLogout {
+    position: fixed;
+    top: 24px;
+    right: 32px;
+    z-index: 100;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
 }
 
 /* Animations */

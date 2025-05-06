@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import '../styles/ManageAppointments.css'; // Custom CSS for styling
-
-
+import LoadingSpinner from './LoadingSpinner'; // Import loading spinner component
 
 const getAppointmentCardColor = (appointment) => {
     if (appointment.is_pending && !appointment.is_approved) {
@@ -16,9 +15,14 @@ const getAppointmentCardColor = (appointment) => {
 };
 
 function ManageAppointments() {
+    const [loading, setLoading] = useState(false); // Loading state
     const [appointments, setAppointments] = useState([]);
     const [selectedAppointment, setSelectedAppointment] = useState(null); // To track selected appointment
     const [errorMessage, setErrorMessage] = useState('');
+
+    useEffect(() => {
+        fetchAppointments();
+    }, []);
 
     const fetchPatientName = async (patientId, token) => {
         console.log(`Fetching patient name for patient_id: ${patientId}`);
@@ -44,6 +48,7 @@ function ManageAppointments() {
     };
 
     const fetchAppointments = async () => {
+        setLoading(true);
         try {
             const token = localStorage.getItem('authToken');
             if (!token) {
@@ -83,10 +88,13 @@ function ManageAppointments() {
         } catch (error) {
             console.error('Error fetching appointments:', error);
             setErrorMessage(error.message);
+        } finally {
+            setLoading(false);
         }
     };
 
     const handleApprove = async (id) => {
+        setLoading(true);
         const token = localStorage.getItem('authToken');
         try {
             const response = await fetch(`https://frozen-sands-51239-b849a8d5756e.herokuapp.com/appointment/${id}/approve`, {
@@ -101,16 +109,18 @@ function ManageAppointments() {
                 throw new Error('Failed to approve appointment.');
             }
 
-            alert('Appointment approved successfully!');
             fetchAppointments();
             setSelectedAppointment(null);
         } catch (error) {
             console.error('Error approving appointment:', error);
-            alert('Failed to approve appointment.');
+            setErrorMessage(error.message);
+        } finally {
+            setLoading(false);
         }
     };
 
     const handleMarkNotPending = async (id) => {
+        setLoading(true);
         const token = localStorage.getItem('authToken');
         try {
             const response = await fetch(`https://frozen-sands-51239-b849a8d5756e.herokuapp.com/appointment/${id}/mark-not-pending`, {
@@ -125,12 +135,13 @@ function ManageAppointments() {
                 throw new Error('Failed to mark appointment as not pending.');
             }
 
-            alert('Appointment marked as not pending successfully!');
             fetchAppointments();
             setSelectedAppointment(null);
         } catch (error) {
             console.error('Error marking appointment as not pending:', error);
-            alert('Failed to mark appointment as not pending.');
+            setErrorMessage(error.message);
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -142,54 +153,47 @@ function ManageAppointments() {
         return 'Unknown Status'; // Fallback case (shouldn't happen ideally)
     };
 
-    useEffect(() => {
-        fetchAppointments();
-    }, []);
-
-    if (errorMessage) {
-        return <p className="errorMessage">{errorMessage}</p>;
-    }
-
-    if (selectedAppointment) {
-        return (
-            <div className="appointmentDetails">
-                <h2>Appointment Details</h2>
-                <p><strong>Date:</strong> {selectedAppointment.date}</p>
-                <p><strong>Time:</strong> {selectedAppointment.startTime} - {selectedAppointment.endTime}</p>
-                <p><strong>Patient:</strong> {selectedAppointment.patientName}</p>
-                <p><strong>Status:</strong> {getStatus(selectedAppointment)}</p>
-                <div className="actionButtons">
-                    <button onClick={() => handleApprove(selectedAppointment.appointment_id)} className="approveButton">Approve</button>
-                    <button onClick={() => handleMarkNotPending(selectedAppointment.appointment_id)} className="markNotPendingButton">Mark Not Pending</button>
-                    <button onClick={() => setSelectedAppointment(null)} className="backButton">Back to Appointments</button>
-                </div>
-            </div>
-        );
-    }
-
-    if (appointments.length === 0) {
-        return <p className="loadingMessage">No appointments found.</p>;
-    }
-
     return (
-        <div className="appointments">
-            <h2 className="appointmentsTitle">Manage Appointments</h2>
-            <div className="appointmentsList">
-                {appointments.map((appointment) => (
-                    <div
-                        key={appointment.appointment_id}
-                        className="appointmentCard"
-                        style={{ backgroundColor: getAppointmentCardColor(appointment) }}
-                        onClick={() => setSelectedAppointment(appointment)}
-                    >
-                        <p><strong>Date:</strong> {appointment.date}</p>
-                        <p><strong>Time:</strong> {appointment.startTime} - {appointment.endTime}</p>
-                        <p><strong>Patient:</strong> {appointment.patientName}</p>
-                        <p><strong>Status:</strong> {getStatus(appointment)}</p>
+        <>
+            {loading && <LoadingSpinner />}
+            {errorMessage ? (
+                <p className="errorMessage">{errorMessage}</p>
+            ) : selectedAppointment ? (
+                <div className="appointmentDetails">
+                    <h2>Appointment Details</h2>
+                    <p><strong>Date:</strong> {selectedAppointment.date}</p>
+                    <p><strong>Time:</strong> {selectedAppointment.startTime} - {selectedAppointment.endTime}</p>
+                    <p><strong>Patient:</strong> {selectedAppointment.patientName}</p>
+                    <p><strong>Status:</strong> {getStatus(selectedAppointment)}</p>
+                    <div className="actionButtons">
+                        <button onClick={() => handleApprove(selectedAppointment.appointment_id)} className="approveButton">Approve</button>
+                        <button onClick={() => handleMarkNotPending(selectedAppointment.appointment_id)} className="markNotPendingButton">Mark Not Pending</button>
+                        <button onClick={() => setSelectedAppointment(null)} className="backButton">Back to Appointments</button>
                     </div>
-                ))}
-            </div>
-        </div>
+                </div>
+            ) : appointments.length === 0 ? (
+                <p className="loadingMessage">No appointments found.</p>
+            ) : (
+                <div className="appointments">
+                    <h2 className="appointmentsTitle">Manage Appointments</h2>
+                    <div className="appointmentsList">
+                        {appointments.map((appointment) => (
+                            <div
+                                key={appointment.appointment_id}
+                                className="appointmentCard"
+                                style={{ backgroundColor: getAppointmentCardColor(appointment) }}
+                                onClick={() => setSelectedAppointment(appointment)}
+                            >
+                                <p><strong>Date:</strong> {appointment.date}</p>
+                                <p><strong>Time:</strong> {appointment.startTime} - {appointment.endTime}</p>
+                                <p><strong>Patient:</strong> {appointment.patientName}</p>
+                                <p><strong>Status:</strong> {getStatus(appointment)}</p>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
+        </>
     );
 }
 

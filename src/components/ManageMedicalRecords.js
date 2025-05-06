@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import '../styles/ManageMedicalRecords.css';
+import LoadingSpinner from './LoadingSpinner';
 
 function ManageMedicalRecords() {
     const [medicalRecords, setMedicalRecords] = useState([]);
@@ -18,8 +19,10 @@ function ManageMedicalRecords() {
         bloodpressure: '',
         date: '',
     });
+    const [loading, setLoading] = useState(false);
 
     const fetchMedicalRecords = async () => {
+        setLoading(true);
         try {
             const token = localStorage.getItem('authToken');
             const response = await fetch('https://frozen-sands-51239-b849a8d5756e.herokuapp.com/medical_record', {
@@ -41,11 +44,13 @@ function ManageMedicalRecords() {
         } catch (error) {
             console.error('Error fetching medical records:', error);
             setErrorMessage(error.message);
+        } finally {
+            setLoading(false);
         }
     };
 
-
     const fetchTreatments = async () => {
+        setLoading(true);
         try {
             const token = localStorage.getItem('authToken');
             const response = await fetch('https://frozen-sands-51239-b849a8d5756e.herokuapp.com/treatement', {
@@ -65,12 +70,13 @@ function ManageMedicalRecords() {
         } catch (error) {
             console.error('Error fetching treatments:', error);
             setErrorMessage(error.message);
+        } finally {
+            setLoading(false);
         }
     };
 
-
-
     const fetchDepartments = async () => {
+        setLoading(true);
         try {
             const token = localStorage.getItem('authToken');
             const response = await fetch('https://frozen-sands-51239-b849a8d5756e.herokuapp.com/department', {
@@ -90,6 +96,8 @@ function ManageMedicalRecords() {
         } catch (error) {
             console.error('Error fetching departments:', error);
             setErrorMessage(error.message);
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -112,6 +120,7 @@ function ManageMedicalRecords() {
 
     const handleCreateSubmit = async (e) => {
         e.preventDefault();
+        setLoading(true);
         try {
             const token = localStorage.getItem('authToken');
             const response = await fetch('https://frozen-sands-51239-b849a8d5756e.herokuapp.com/medical_record', {
@@ -127,7 +136,6 @@ function ManageMedicalRecords() {
                 throw new Error('Failed to create medical record.');
             }
 
-            alert('Medical record created successfully!');
             setNewRecord({
                 department_id: '',
                 patient_id: '',
@@ -142,11 +150,13 @@ function ManageMedicalRecords() {
         } catch (error) {
             console.error('Error creating medical record:', error);
             setErrorMessage(error.message); // Set error message only when there's an error
+        } finally {
+            setLoading(false);
         }
     };
 
-
     const handleDelete = async (recordId) => {
+        setLoading(true);
         try {
             const token = localStorage.getItem('authToken');
             const response = await fetch(`https://frozen-sands-51239-b849a8d5756e.herokuapp.com/medical_record/${recordId}`, {
@@ -162,15 +172,17 @@ function ManageMedicalRecords() {
             }
 
             fetchMedicalRecords();
-            alert('Medical record deleted successfully!');
         } catch (error) {
             console.error('Error deleting medical record:', error);
             setErrorMessage(error.message);
+        } finally {
+            setLoading(false);
         }
     };
 
     const handleUpdateSubmit = async (e) => {
         e.preventDefault();
+        setLoading(true);
         try {
             const token = localStorage.getItem('authToken');
             const response = await fetch('https://frozen-sands-51239-b849a8d5756e.herokuapp.com/medical_record', {
@@ -186,12 +198,13 @@ function ManageMedicalRecords() {
                 throw new Error('Failed to update medical record.');
             }
 
-            alert('Medical record updated successfully!');
             setSelectedRecord(null);
             fetchMedicalRecords();
         } catch (error) {
             console.error('Error updating medical record:', error);
             setErrorMessage(error.message);
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -204,16 +217,15 @@ function ManageMedicalRecords() {
         return treatment ? treatment.name : 'Unknown Treatment';
     };
 
-
     useEffect(() => {
         fetchMedicalRecords();
         fetchDepartments();
         fetchTreatments();
     }, []);
 
-
     return (
         <div className="medicalRecords">
+            {loading && <LoadingSpinner />}
             <h2 className="medicalRecordsTitle">Medical Records</h2>
             {!isCreateMode && ( // Conditionally render search bar only if not in create mode
                 <input
@@ -391,7 +403,6 @@ function ManageMedicalRecords() {
             )}
         </div>
     );
-
 }
 
 export default ManageMedicalRecords;

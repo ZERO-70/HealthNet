@@ -1,15 +1,18 @@
 import React, { useState } from 'react';
 import '../styles/Login.css'; // Adjust the path based on your project structure
 import { useNavigate } from 'react-router-dom'; // For redirection
+import LoadingSpinner from '../components/LoadingSpinner'; // Import LoadingSpinner
 
 function Login() {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [errorMessage, setErrorMessage] = useState('');
+    const [loading, setLoading] = useState(false); // Add loading state
     const navigate = useNavigate(); // Initialize useNavigate for navigation
 
     const handleSubmit = async (event) => {
         event.preventDefault();
+        setLoading(true); // Set loading to true
 
         const loginUrl = 'https://frozen-sands-51239-b849a8d5756e.herokuapp.com/user_authentication/login';
         const homeUrl = 'https://frozen-sands-51239-b849a8d5756e.herokuapp.com/home';
@@ -62,8 +65,6 @@ function Login() {
             console.log('Home Data:', homeData);
             localStorage.setItem('homeData', homeData);
 
-            alert('Login successful!');
-
             // Redirect user based on role
             if (homeData.includes('PATIENT')) {
                 navigate('/patient-portal'); // Redirect to Patient Portal
@@ -71,22 +72,22 @@ function Login() {
                 navigate('/doctor-portal'); // Redirect to Doctor Portal
             } else if (homeData.includes('STAFF')) {
                 navigate('/staff-portal');
-            }
-            else if (homeData.includes('ADMIN')) {
+            } else if (homeData.includes('ADMIN')) {
                 navigate('/admin-portal');
-            }
-
-            else {
+            } else {
                 throw new Error('Unknown role in response data');
             }
         } catch (error) {
             console.error('Error during login process:', error.message);
             setErrorMessage('Login failed. Please check your username and password.');
+        } finally {
+            setLoading(false); // Set loading to false
         }
     };
 
     return (
         <div className="wrapper">
+            {loading && <LoadingSpinner />} {/* Display LoadingSpinner when loading */}
             <div className="container">
                 <h1 className="title">Welcome Back</h1>
                 <p className="subtitle">Access your HealthNet dashboard.</p>

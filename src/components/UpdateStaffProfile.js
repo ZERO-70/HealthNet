@@ -1,15 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import '../styles/UpdateStaffProfile.css';
+import LoadingSpinner from './LoadingSpinner';
 
 function UpdateStaffProfile() {
     const [formData, setFormData] = useState({});
     const [successMessage, setSuccessMessage] = useState('');
     const [errorMessage, setErrorMessage] = useState('');
     const [imageFile, setImageFile] = useState(null);
+    const [loading, setLoading] = useState(false);
 
     // Fetch current staff data
     useEffect(() => {
         const fetchStaffData = async () => {
+            setLoading(true);
             try {
                 const token = localStorage.getItem('authToken');
                 if (!token) {
@@ -34,6 +37,8 @@ function UpdateStaffProfile() {
             } catch (error) {
                 console.error('Error fetching staff data:', error);
                 setErrorMessage('Failed to fetch staff data.');
+            } finally {
+                setLoading(false);
             }
         };
 
@@ -81,6 +86,7 @@ function UpdateStaffProfile() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        setLoading(true);
 
         try {
             const token = localStorage.getItem('authToken');
@@ -106,12 +112,14 @@ function UpdateStaffProfile() {
         } catch (error) {
             console.error('Error updating profile:', error);
             setErrorMessage('Failed to update profile.');
+        } finally {
+            setLoading(false);
         }
     };
 
-
     return (
         <div className="updateStaffProfile">
+            {loading && <LoadingSpinner />}
             <h2>Update Staff Profile</h2>
             <form onSubmit={handleSubmit} className="updateForm">
                 <div className="formGroup">

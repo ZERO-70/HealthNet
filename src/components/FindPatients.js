@@ -1,11 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import '../styles/FindPatients.css';
+import LoadingSpinner from './LoadingSpinner';
+import { useLoading } from '../hooks/useLoading';
 
 function FindPatient() {
     const [patients, setPatients] = useState([]);
     const [filteredPatients, setFilteredPatients] = useState([]);
     const [searchTerm, setSearchTerm] = useState('');
     const [errorMessage, setErrorMessage] = useState('');
+    const { loading, withLoading } = useLoading();
+    const { loading: searchLoading, withLoading: withSearchLoading } = useLoading();
 
     const fetchPatients = async () => {
         try {
@@ -28,6 +32,7 @@ function FindPatient() {
         } catch (error) {
             console.error('Error fetching patients:', error);
             setErrorMessage(error.message);
+            setFilteredPatients([]);
         }
     };
 
@@ -74,14 +79,14 @@ function FindPatient() {
 
             // If a number is entered, fetch the specific patient by ID
             if (!isNaN(searchTerm) && searchTerm.trim() !== '') {
-                fetchPatientById(searchTerm.trim());
+                withSearchLoading(fetchPatientById)(searchTerm.trim());
             }
         }
     };
 
     useEffect(() => {
-        fetchPatients();
-    }, []);
+        withLoading(fetchPatients)();
+    }, [withLoading]);
 
     return (
         <div className="findPatient">
@@ -93,20 +98,30 @@ function FindPatient() {
                 onChange={handleSearch}
                 onKeyDown={handleKeyDown}
                 className="searchBar"
+                disabled={loading || searchLoading}
             />
             {errorMessage && <p className="errorMessage">{errorMessage}</p>}
-            <div className="patientGrid">
-                {filteredPatients.map((patient) => (
-                    <div key={patient.id} className="patientCard">
-                        <p><strong>Name:</strong> {patient.name}</p>
-                        <p><strong>Age:</strong> {patient.age}</p>
-                        <p><strong>Gender:</strong> {patient.gender}</p>
-                        <p><strong>Weight:</strong> {patient.weight}</p>
-                        <p><strong>Height:</strong> {patient.height}</p>
-                        <p><strong>Contact Info:</strong> {patient.contact_info}</p>
-                    </div>
-                ))}
-            </div>
+            
+            {(loading || searchLoading) && <LoadingSpinner />}
+            
+            {!loading && !searchLoading && (
+                <div className="patientGrid">
+                    {filteredPatients.length === 0 ? (
+                        <p className="noResults">No patients found</p>
+                    ) : (
+                        filteredPatients.map((patient) => (
+                            <div key={patient.id} className="patientCard">
+                                <p><strong>Name:</strong> {patient.name}</p>
+                                <p><strong>Age:</strong> {patient.age}</p>
+                                <p><strong>Gender:</strong> {patient.gender}</p>
+                                <p><strong>Weight:</strong> {patient.weight}</p>
+                                <p><strong>Height:</strong> {patient.height}</p>
+                                <p><strong>Contact Info:</strong> {patient.contact_info}</p>
+                            </div>
+                        ))
+                    )}
+                </div>
+            )}
         </div>
     );
 }

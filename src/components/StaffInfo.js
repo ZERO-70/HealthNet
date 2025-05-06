@@ -1,58 +1,39 @@
 import React, { useEffect, useState } from 'react';
+import { useLoading } from '../hooks/useLoading';
+import LoadingSpinner from './LoadingSpinner';
 import '../styles/StaffInfo.css'; // CSS for the component
 
 function StaffInfo() {
     const [staffData, setStaffData] = useState({});
     const [errorMessage, setErrorMessage] = useState('');
+    const { loading, withLoading } = useLoading();
+
+    const fetchStaffInfo = async () => {
+        const token = localStorage.getItem('authToken');
+        if (!token) throw new Error('Authentication token is missing. Please log in again.');
+        const response = await fetch('https://frozen-sands-51239-b849a8d5756e.herokuapp.com/staff/getmine', {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json',
+            },
+        });
+        if (!response.ok) {
+            const errorResponse = await response.text();
+            throw new Error(`Error fetching staff info: ${errorResponse}`);
+        }
+        const data = await response.json();
+        setStaffData(data);
+        if (data?.id) localStorage.setItem('staffId', data.id);
+    };
 
     useEffect(() => {
-        const fetchStaffInfo = async () => {
-            try {
-                const token = localStorage.getItem('authToken');
-                if (!token) {
-                    throw new Error('Authentication token is missing. Please log in again.');
-                }
+        withLoading(fetchStaffInfo, e => setErrorMessage(e.message))();
+    }, [withLoading]);
 
-                const response = await fetch('https://frozen-sands-51239-b849a8d5756e.herokuapp.com/staff/getmine', {
-                    method: 'GET',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json',
-                    },
-                });
-
-                if (!response.ok) {
-                    const errorResponse = await response.text();
-                    throw new Error(`Error fetching staff info: ${errorResponse}`);
-                }
-
-                const data = await response.json();
-                console.log('Fetched staff data:', data); // Debugging line
-                setStaffData(data);
-
-                // Save the staff ID to localStorage
-                if (data?.id) {
-                    localStorage.setItem('staffId', data.id);
-                    console.log('Staff ID saved to localStorage:', data.id);
-                } else {
-                    console.warn('Staff ID is missing in the fetched data.');
-                }
-            } catch (error) {
-                console.error('Error fetching staff info:', error);
-                setErrorMessage(error.message);
-            }
-        };
-
-        fetchStaffInfo();
-    }, []);
-
-    if (errorMessage) {
-        return <p className="errorMessage">{errorMessage}</p>;
-    }
-
-    if (!staffData || Object.keys(staffData).length === 0) {
-        return <p className="loadingMessage">Loading your information...</p>;
-    }
+    if (loading) return <LoadingSpinner />;
+    if (errorMessage) return <p className="errorMessage">{errorMessage}</p>;
+    if (!staffData || Object.keys(staffData).length === 0) return <LoadingSpinner />;
 
     return (
         <div className="staffInfo">

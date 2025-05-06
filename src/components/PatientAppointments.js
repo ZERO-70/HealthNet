@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import '../styles/PatientAppointments.css'; // Custom CSS for styling
-
+import LoadingSpinner from './LoadingSpinner';
+import { useLoading } from '../hooks/useLoading';
 
 const getAppointmentCardColor = (appointment) => {
     if (appointment.is_pending && !appointment.is_approved) {
@@ -18,6 +19,7 @@ const getAppointmentCardColor = (appointment) => {
 function PatientAppointments() {
     const [appointments, setAppointments] = useState([]);
     const [errorMessage, setErrorMessage] = useState('');
+    const { loading, withLoading } = useLoading();
 
     const fetchDoctorName = async (doctorId, token) => {
         try {
@@ -87,41 +89,45 @@ function PatientAppointments() {
     };
 
     useEffect(() => {
-        fetchAppointments();
-    }, []);
+        withLoading(fetchAppointments)();
+    }, [withLoading]);
 
     if (errorMessage) {
         return <p className="errorMessage">{errorMessage}</p>;
     }
 
-    if (appointments.length === 0) {
-        return <p className="loadingMessage">No appointments found.</p>;
-    }
-
-
     return (
         <div className="appointments">
-            <h2 className="appointmentsTitle">Your Appointments</h2>
-            <div className="appointmentsList">
-                {appointments.map((appointment) => (
-                    <div
-                        key={appointment.appointment_id}
-                        className="appointmentCard"
-                        style={{ backgroundColor: getAppointmentCardColor(appointment) }}
-                    >
+            {loading && <LoadingSpinner />}
 
-                        <p><strong>Date:</strong> {appointment.date}</p>
-                        <p><strong>Time:</strong> {appointment.startTime} - {appointment.endTime}</p>
-                        <p><strong>Doctor:</strong> {appointment.doctorName}</p>
-                        <p><strong>Is Approved:</strong> {appointment.is_approved ? 'Yes' : 'No'}</p>
-                        {appointment.is_pending && !appointment.is_approved
-                            ? 'Pending'
-                            : appointment.is_approved && !appointment.is_pending
-                                ? 'Completed'
-                                : appointment.is_approved && appointment.is_pending ? "Approved" : "Rejected"}
-                    </div>
-                ))}
-            </div>
+            {!loading && (
+                <>
+                    <h2 className="appointmentsTitle">Your Appointments</h2>
+                    {appointments.length === 0 ? (
+                        <p className="loadingMessage">No appointments found.</p>
+                    ) : (
+                        <div className="appointmentsList">
+                            {appointments.map((appointment) => (
+                                <div
+                                    key={appointment.appointment_id}
+                                    className="appointmentCard"
+                                    style={{ backgroundColor: getAppointmentCardColor(appointment) }}
+                                >
+                                    <p><strong>Date:</strong> {appointment.date}</p>
+                                    <p><strong>Time:</strong> {appointment.startTime} - {appointment.endTime}</p>
+                                    <p><strong>Doctor:</strong> {appointment.doctorName}</p>
+                                    <p><strong>Is Approved:</strong> {appointment.is_approved ? 'Yes' : 'No'}</p>
+                                    {appointment.is_pending && !appointment.is_approved
+                                        ? 'Pending'
+                                        : appointment.is_approved && !appointment.is_pending
+                                            ? 'Completed'
+                                            : appointment.is_approved && appointment.is_pending ? "Approved" : "Rejected"}
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </>
+            )}
         </div>
     );
 }

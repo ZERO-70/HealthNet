@@ -1,9 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import '../styles/PatientMedicalRecords.css'; // Add relevant styles
+import LoadingSpinner from './LoadingSpinner';
+import { useLoading } from '../hooks/useLoading';
 
 function PatientMedicalRecords() {
     const [medicalRecords, setMedicalRecords] = useState([]);
     const [errorMessage, setErrorMessage] = useState('');
+    const { loading, withLoading } = useLoading();
 
     useEffect(() => {
         const fetchMedicalRecords = async () => {
@@ -36,31 +39,37 @@ function PatientMedicalRecords() {
             }
         };
 
-        fetchMedicalRecords();
-    }, []);
+        withLoading(fetchMedicalRecords)();
+    }, [withLoading]);
 
     if (errorMessage) {
         return <p className="errorMessage">{errorMessage}</p>;
     }
 
-    if (medicalRecords.length === 0) {
-        return <p className="loadingMessage">No medical records found.</p>;
-    }
-
     return (
         <div className="medicalRecords">
-            <h2 className="recordsTitle">Your Medical Records</h2>
-            <div className="recordsList">
-                {medicalRecords.map((record) => (
-                    <div key={record.record_id} className="recordCard">
-                        <p><strong>Date:</strong> {record.date}</p>
-                        <p><strong>Diagnosis:</strong> {record.diagnosis}</p>
-                        <p><strong>Blood Pressure:</strong> {record.bloodpressure}</p>
-                        <p><strong>Treatment ID:</strong> {record.treatement_id}</p>
-                        <p><strong>Department ID:</strong> {record.department_id}</p>
-                    </div>
-                ))}
-            </div>
+            {loading && <LoadingSpinner />}
+            
+            {!loading && (
+                <>
+                    <h2 className="recordsTitle">Your Medical Records</h2>
+                    {medicalRecords.length === 0 ? (
+                        <p className="loadingMessage">No medical records found.</p>
+                    ) : (
+                        <div className="recordsList">
+                            {medicalRecords.map((record) => (
+                                <div key={record.record_id} className="recordCard">
+                                    <p><strong>Date:</strong> {record.date}</p>
+                                    <p><strong>Diagnosis:</strong> {record.diagnosis}</p>
+                                    <p><strong>Blood Pressure:</strong> {record.bloodpressure}</p>
+                                    <p><strong>Treatment ID:</strong> {record.treatement_id}</p>
+                                    <p><strong>Department ID:</strong> {record.department_id}</p>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </>
+            )}
         </div>
     );
 }

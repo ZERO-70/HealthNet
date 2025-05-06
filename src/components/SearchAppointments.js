@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import '../styles/SearchAppointment.css';
+import LoadingSpinner from './LoadingSpinner';
+import { useLoading } from '../hooks/useLoading';
 
 function SearchAppointment() {
     const [appointments, setAppointments] = useState([]);
     const [filteredAppointments, setFilteredAppointments] = useState([]);
     const [searchTerm, setSearchTerm] = useState('');
     const [errorMessage, setErrorMessage] = useState('');
+    const { loading, withLoading } = useLoading();
 
     const fetchAppointments = async () => {
         try {
@@ -43,6 +46,7 @@ function SearchAppointment() {
         } catch (error) {
             console.error('Error fetching appointments:', error);
             setErrorMessage(error.message);
+            setFilteredAppointments([]);
         }
     };
 
@@ -104,8 +108,9 @@ function SearchAppointment() {
     };
 
     useEffect(() => {
-        fetchAppointments();
-    }, []);
+        withLoading(fetchAppointments)();
+    }, [withLoading]);
+
     const getAppointmentCardColor = (appointment) => {
         if (appointment.is_pending && !appointment.is_approved) {
             return 'lightyellow'; // Light yellow for Pending
@@ -118,8 +123,6 @@ function SearchAppointment() {
         }
     };
 
-
-
     return (
         <div className="searchAppointment">
             <h2 className="searchAppointmentTitle">Search Appointment</h2>
@@ -129,35 +132,42 @@ function SearchAppointment() {
                 value={searchTerm}
                 onChange={handleSearch}
                 className="searchBar"
+                disabled={loading}
             />
             {errorMessage && <p className="errorMessage">{errorMessage}</p>}
-            <div className="appointmentGrid">
-                {filteredAppointments.map((appointment) => (
-                    <div
-                        key={appointment.appointment_id}
-                        className="appointmentCard"
-                        style={{ backgroundColor: getAppointmentCardColor(appointment) }}
-                    >
-
-                        <p><strong>Appointment ID:</strong> {appointment.appointment_id}</p>
-                        <p><strong>Patient Name:</strong> {appointment.patient_name}</p>
-                        <p><strong>Doctor Name:</strong> {appointment.doctor_name}</p>
-                        <p><strong>Date:</strong> {appointment.date}</p>
-                        <p><strong>Start Time:</strong> {appointment.startTime}</p>
-                        <p><strong>End Time:</strong> {appointment.endTime}</p>
-                        <p>
-                            <strong>Status:</strong>{' '}
-                            {appointment.is_pending && !appointment.is_approved
-                                ? 'Pending'
-                                : appointment.is_approved && !appointment.is_pending
-                                    ? 'Completed'
-                                    : appointment.is_approved && appointment.is_pending ? "Approved" : "Rejected"}
-                        </p>
-
-
-                    </div>
-                ))}
-            </div>
+            
+            {loading && <LoadingSpinner />}
+            
+            {!loading && (
+                <div className="appointmentGrid">
+                    {filteredAppointments.length === 0 ? (
+                        <p className="noResults">No appointments found</p>
+                    ) : (
+                        filteredAppointments.map((appointment) => (
+                            <div
+                                key={appointment.appointment_id}
+                                className="appointmentCard"
+                                style={{ backgroundColor: getAppointmentCardColor(appointment) }}
+                            >
+                                <p><strong>Appointment ID:</strong> {appointment.appointment_id}</p>
+                                <p><strong>Patient Name:</strong> {appointment.patient_name}</p>
+                                <p><strong>Doctor Name:</strong> {appointment.doctor_name}</p>
+                                <p><strong>Date:</strong> {appointment.date}</p>
+                                <p><strong>Start Time:</strong> {appointment.startTime}</p>
+                                <p><strong>End Time:</strong> {appointment.endTime}</p>
+                                <p>
+                                    <strong>Status:</strong>{' '}
+                                    {appointment.is_pending && !appointment.is_approved
+                                        ? 'Pending'
+                                        : appointment.is_approved && !appointment.is_pending
+                                            ? 'Completed'
+                                            : appointment.is_approved && appointment.is_pending ? "Approved" : "Rejected"}
+                                </p>
+                            </div>
+                        ))
+                    )}
+                </div>
+            )}
         </div>
     );
 }

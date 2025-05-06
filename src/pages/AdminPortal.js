@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import AdminInfo from '../components/AdminInfo'; // Admin Info Component
 import StaffDepartmentManagement from '../components/StaffDepartmentManagement'; // Component for managing staff and departments
 import Analytics from '../components/Analytics'; // Component for analytics
@@ -7,6 +8,17 @@ import '../styles/AdminPortal.css'; // Styles for the admin portal
 
 function AdminPortal() {
     const [activeTab, setActiveTab] = useState('AdminInfo'); // Default active tab
+    const navigate = useNavigate();
+
+    const handleLogout = () => {
+        // Clear all stored authentication data
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('homeData');
+        localStorage.removeItem('adminId');
+        
+        // Redirect to login page
+        navigate('/');
+    };
 
     const renderTabContent = () => {
         switch (activeTab) {
@@ -25,7 +37,10 @@ function AdminPortal() {
 
     return (
         <div className="adminPortal">
-            <h1 className="portalTitle">Admin Portal</h1>
+            <button className="logoutButton fixedLogout" onClick={handleLogout}>Logout</button>
+            <div className="portalHeader">
+                <h1 className="mb-2">Admin Portal</h1>
+            </div>
             <div className="tabNavigation">
                 <button
                     className={`tabButton ${activeTab === 'AdminInfo' ? 'active' : ''}`}
@@ -52,7 +67,7 @@ function AdminPortal() {
                     Profile Update
                 </button>
             </div>
-            <div className="tabContent">{renderTabContent()}</div>
+            <div className="tabContent card">{renderTabContent()}</div>
         </div>
     );
 }

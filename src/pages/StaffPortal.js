@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import StaffInfo from '../components/StaffInfo';
 import ManageMedicalRecords from '../components/ManageMedicalRecords';
 import ManageInventory from '../components/ManageInventory';
@@ -10,6 +11,17 @@ import '../styles/StaffPortal.css';
 
 function StaffPortal() {
     const [activeTab, setActiveTab] = useState('StaffInfo'); // Default tab
+    const navigate = useNavigate();
+
+    const handleLogout = () => {
+        // Clear all stored authentication data
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('homeData');
+        localStorage.removeItem('staffId');
+        
+        // Redirect to login page
+        navigate('/');
+    };
 
     const renderTabContent = () => {
         switch (activeTab) {
@@ -34,6 +46,10 @@ function StaffPortal() {
 
     return (
         <div className="staffPortal">
+            <button className="logoutButton fixedLogout" onClick={handleLogout}>Logout</button>
+            <div className="portalHeader">
+                <h1 className="mb-2">Staff Portal</h1>
+            </div>
             <div className="tabNavigation">
                 <button
                     className={`tabButton ${activeTab === 'StaffInfo' ? 'active' : ''}`}

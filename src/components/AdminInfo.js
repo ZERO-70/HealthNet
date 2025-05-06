@@ -1,60 +1,48 @@
 import React, { useEffect, useState } from 'react';
+import { useLoading } from '../hooks/useLoading';
+import LoadingSpinner from './LoadingSpinner';
 import '../styles/AdminInfo.css'; // CSS for AdminInfo component
 
+/**
+ * AdminInfo fetches and displays the current admin's profile information.
+ *
+ * Fetches data from the /getmine endpoint using the stored auth token.
+ * Shows a loading message, error message, or the admin's info.
+ *
+ * Usage:
+ *   <AdminInfo />
+ *
+ * Styles: AdminInfo.css
+ */
 function AdminInfo() {
     const [adminData, setAdminData] = useState({});
     const [errorMessage, setErrorMessage] = useState('');
+    const { loading, withLoading } = useLoading();
+
+    // fetch function separated to wrap with loading
+    const fetchAdminInfo = async () => {
+        const token = localStorage.getItem('authToken');
+        if (!token) throw new Error('Authentication token is missing. Please log in again.');
+        const response = await fetch(`https://frozen-sands-51239-b849a8d5756e.herokuapp.com/persons/getmine`, {
+            method: 'GET',
+            headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+        });
+        if (!response.ok) {
+            const errorResponse = await response.text();
+            throw new Error(`Error fetching admin info: ${errorResponse}`);
+        }
+        const data = await response.json();
+        setAdminData(data);
+        if (data.id) localStorage.setItem('adminId', data.id);
+    };
 
     useEffect(() => {
-        const fetchAdminInfo = async () => {
-            try {
-                const token = localStorage.getItem('authToken');
-                if (!token) {
-                    throw new Error('Authentication token is missing. Please log in again.');
-                }
+        withLoading(fetchAdminInfo, e => setErrorMessage(e.message))();
+    }, [withLoading]);
 
-                // Log the token for debugging
-                console.log('Token being sent with request:', token);
-
-                // Fetch admin data from the /getmine endpoint
-                const response = await fetch(`https://frozen-sands-51239-b849a8d5756e.herokuapp.com/persons/getmine`, {
-                    method: 'GET',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json',
-                    },
-                });
-
-                if (!response.ok) {
-                    const errorResponse = await response.text();
-                    throw new Error(`Error fetching admin info: ${errorResponse}`);
-                }
-
-                const data = await response.json();
-                console.log('Fetched admin data:', data); // Debugging line
-                setAdminData(data);
-
-                // Store the admin's ID in local storage
-                if (data && data.id) {
-                    localStorage.setItem('adminId', data.id);
-                    console.log('Admin ID stored in localStorage:', data.id);
-                }
-            } catch (error) {
-                console.error('Error fetching admin info:', error);
-                setErrorMessage(error.message);
-            }
-        };
-
-        fetchAdminInfo();
-    }, []);
-
-    if (errorMessage) {
-        return <p className="errorMessage">{errorMessage}</p>;
-    }
-
-    if (!adminData || Object.keys(adminData).length === 0) {
-        return <p className="loadingMessage">Loading your information...</p>;
-    }
+    if (loading) return <LoadingSpinner />;
+    if (errorMessage) return <p className="errorMessage">{errorMessage}</p>;
+    if (!adminData || Object.keys(adminData).length === 0) return <LoadingSpinner />;
 
     return (
         <div className="adminInfo">

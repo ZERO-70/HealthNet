@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import '../styles/AvailableDoctors.css'; // New CSS file for AvailableDoctors
+import LoadingSpinner from './LoadingSpinner';
+import { useLoading } from '../hooks/useLoading';
 
 function AvailableDoctors() {
     const [doctors, setDoctors] = useState([]);
@@ -13,6 +15,8 @@ function AvailableDoctors() {
     const [maxDuration, setMaxDuration] = useState(120); // State for max allowed duration
     const [appointmentDuration, setAppointmentDuration] = useState(5); // State for selected duration
     const [responseMessage, setResponseMessage] = useState(''); // State for backend response message
+    const { loading, withLoading } = useLoading();
+    const { loading: loadingTimes, withLoading: withLoadingTimes } = useLoading();
 
     useEffect(() => {
         const fetchDoctors = async () => {
@@ -43,8 +47,8 @@ function AvailableDoctors() {
             }
         };
 
-        fetchDoctors();
-    }, []);
+        withLoading(fetchDoctors)();
+    }, [withLoading]);
 
     const handleDoctorClick = (doctor) => {
         setSelectedDoctor(doctor);
@@ -64,33 +68,37 @@ function AvailableDoctors() {
         setAppointmentDate(date);
 
         if (date) {
-            try {
-                const token = localStorage.getItem('authToken');
-                if (!token) {
-                    throw new Error('Authentication token is missing. Please log in again.');
-                }
-
-                const response = await fetch(
-                    `https://frozen-sands-51239-b849a8d5756e.herokuapp.com/doctor/${selectedDoctor.id}/available_time?date=${date}`,
-                    {
-                        method: 'GET',
-                        headers: {
-                            'Authorization': `Bearer ${token}`,
-                            'Content-Type': 'application/json',
-                        },
+            const fetchAvailableTimes = async () => {
+                try {
+                    const token = localStorage.getItem('authToken');
+                    if (!token) {
+                        throw new Error('Authentication token is missing. Please log in again.');
                     }
-                );
 
-                if (!response.ok) {
-                    throw new Error('Failed to fetch available times.');
+                    const response = await fetch(
+                        `https://frozen-sands-51239-b849a8d5756e.herokuapp.com/doctor/${selectedDoctor.id}/available_time?date=${date}`,
+                        {
+                            method: 'GET',
+                            headers: {
+                                'Authorization': `Bearer ${token}`,
+                                'Content-Type': 'application/json',
+                            },
+                        }
+                    );
+
+                    if (!response.ok) {
+                        throw new Error('Failed to fetch available times.');
+                    }
+
+                    const times = await response.json();
+                    setAvailableTimes(times);
+                } catch (error) {
+                    console.error('Error fetching available times:', error);
+                    setAvailableTimes([]); // Reset times in case of an error
                 }
+            };
 
-                const times = await response.json();
-                setAvailableTimes(times);
-            } catch (error) {
-                console.error('Error fetching available times:', error);
-                setAvailableTimes([]); // Reset times in case of an error
-            }
+            await withLoadingTimes(fetchAvailableTimes)();
         }
     };
 
@@ -107,7 +115,6 @@ function AvailableDoctors() {
         setStartTime(e.target.value);
     };
 
-
     const handleDurationChange = (e) => {
         setAppointmentDuration(e.target.value);
     };
@@ -120,19 +127,19 @@ function AvailableDoctors() {
             }
 
             if (!selectedTimeRange) {
-                alert('Please select a valid time range.');
+                setResponseMessage('Please select a valid time range.');
                 return;
             }
 
             if (!startTime) {
-                alert('Please select a valid start time.');
+                setResponseMessage('Please select a valid start time.');
                 return;
             }
 
             const [rangeStart, rangeEnd] = selectedTimeRange.split(' - ');
 
             if (startTime < rangeStart || startTime > rangeEnd) {
-                alert('The selected start time is outside the available time range.');
+                setResponseMessage('The selected start time is outside the available time range.');
                 return;
             }
 
@@ -144,7 +151,7 @@ function AvailableDoctors() {
                 const currentTime = now.toTimeString().split(' ')[0].slice(0, 5); // Extract HH:mm format
 
                 if (startTime < currentTime) {
-                    alert('You cannot select a start time earlier than the current time.');
+                    setResponseMessage('You cannot select a start time earlier than the current time.');
                     return;
                 }
             }
@@ -193,127 +200,132 @@ function AvailableDoctors() {
         }
     };
 
-
-
-
     if (errorMessage) {
         return <p className="errorMessage">{errorMessage}</p>;
     }
 
-    if (doctors.length === 0) {
-        return <p className="loadingMessage">Loading available doctors...</p>;
-    }
-
     return (
         <div className="availableDoctors">
-            <h2 className="infoTitle">Available Doctors</h2>
-            {!selectedDoctor ? (
-                <div className="doctorGrid">
-                    {doctors.map((doctor) => (
-                        <div
-                            key={doctor.id}
-                            className="doctorItem"
-                            onClick={() => handleDoctorClick(doctor)}
-                        >
-                            <p><strong>Name:</strong> {doctor.name}</p>
-                            <p><strong>Specialization:</strong> {doctor.specialization}</p>
-                        </div>
-                    ))}
-                </div>
-            ) : (
-                <div className="doctorDetails">
-                    {selectedDoctor.image && selectedDoctor.image_type ? (
-                        <img
-                            src={`data:${selectedDoctor.image_type};base64,${selectedDoctor.image}`}
-                            alt="Doctor"
-                            className="profileImage"
-                        />
-                    ) : (
-                        <div className="placeholderCircle">
-                            <p className="placeholderText">No Image</p>
-                        </div>
-                    )}
-                    <p><strong>Name:</strong> {selectedDoctor.name}</p>
-                    <p><strong>Specialization:</strong> {selectedDoctor.specialization}</p>
-                    <p><strong>Gender:</strong> {selectedDoctor.gender}</p>
-                    <p><strong>Age:</strong> {selectedDoctor.age}</p>
-                    <p><strong>Contact Info:</strong> {selectedDoctor.contact_info}</p>
-                    <p><strong>Address:</strong> {selectedDoctor.address}</p>
-
-                    <button className="bookAppointmentButton" onClick={handleBookAppointmentClick}>
-                        Book Appointment
-                    </button>
-
-                    <button className="backButton" onClick={handleBackClick}>
-                        Back to List
-                    </button>
-
-                    {showAppointmentTab && (
-                        <div className="appointmentTab">
-                            <h3>Select Appointment Date</h3>
-                            <input
-                                type="date"
-                                value={appointmentDate}
-                                onChange={handleDateChange}
-                                className="appointmentDateInput"
-                                min={new Date().toISOString().split('T')[0]}
-                                required
-                            />
-                            {availableTimes.length > 0 && (
-                                <>
-                                    <h3>Select Available Time Range</h3>
-                                    <select
-                                        value={selectedTimeRange}
-                                        onChange={handleTimeRangeChange}
-                                        className="appointmentTimeSelect"
-                                        required
+            {loading && <LoadingSpinner />}
+            
+            {!loading && (
+                <>
+                    <h2 className="infoTitle">Available Doctors</h2>
+                    {!selectedDoctor ? (
+                        <div className="doctorGrid">
+                            {doctors.length === 0 ? (
+                                <p className="loadingMessage">No doctors available.</p>
+                            ) : (
+                                doctors.map((doctor) => (
+                                    <div
+                                        key={doctor.id}
+                                        className="doctorItem"
+                                        onClick={() => handleDoctorClick(doctor)}
                                     >
-                                        <option value="">Select a range</option>
-                                        {availableTimes.map((time, index) => (
-                                            <option key={index} value={time}>
-                                                {time}
-                                            </option>
-                                        ))}
-                                    </select>
-                                    {selectedTimeRange && (
+                                        <p><strong>Name:</strong> {doctor.name}</p>
+                                        <p><strong>Specialization:</strong> {doctor.specialization}</p>
+                                    </div>
+                                ))
+                            )}
+                        </div>
+                    ) : (
+                        <div className="doctorDetails">
+                            {selectedDoctor.image && selectedDoctor.image_type ? (
+                                <img
+                                    src={`data:${selectedDoctor.image_type};base64,${selectedDoctor.image}`}
+                                    alt="Doctor"
+                                    className="profileImage"
+                                />
+                            ) : (
+                                <div className="placeholderCircle">
+                                    <p className="placeholderText">No Image</p>
+                                </div>
+                            )}
+                            <p><strong>Name:</strong> {selectedDoctor.name}</p>
+                            <p><strong>Specialization:</strong> {selectedDoctor.specialization}</p>
+                            <p><strong>Gender:</strong> {selectedDoctor.gender}</p>
+                            <p><strong>Age:</strong> {selectedDoctor.age}</p>
+                            <p><strong>Contact Info:</strong> {selectedDoctor.contact_info}</p>
+                            <p><strong>Address:</strong> {selectedDoctor.address}</p>
+
+                            <button className="bookAppointmentButton" onClick={handleBookAppointmentClick}>
+                                Book Appointment
+                            </button>
+
+                            <button className="backButton" onClick={handleBackClick}>
+                                Back to List
+                            </button>
+
+                            {showAppointmentTab && (
+                                <div className="appointmentTab">
+                                    <h3>Select Appointment Date</h3>
+                                    <input
+                                        type="date"
+                                        value={appointmentDate}
+                                        onChange={handleDateChange}
+                                        className="appointmentDateInput"
+                                        min={new Date().toISOString().split('T')[0]}
+                                        required
+                                    />
+                                    {loadingTimes && <LoadingSpinner />}
+                                    
+                                    {!loadingTimes && availableTimes.length > 0 && (
                                         <>
-                                            <h3>Select Start Time</h3>
-                                            <input
-                                                type="time"
-                                                value={startTime}
-                                                onChange={handleStartTimeChange}
-                                                className="appointmentStartTimeInput"
-                                                required
-                                            />
-                                            <h3>Select Appointment Duration (in minutes)</h3>
+                                            <h3>Select Available Time Range</h3>
                                             <select
-                                                value={appointmentDuration}
-                                                onChange={handleDurationChange}
-                                                className="appointmentDurationSelect"
+                                                value={selectedTimeRange}
+                                                onChange={handleTimeRangeChange}
+                                                className="appointmentTimeSelect"
                                                 required
                                             >
-                                                {[...Array(Math.floor(maxDuration / 5)).keys()].map((i) => (
-                                                    <option key={i} value={(i + 1) * 5}>
-                                                        {(i + 1) * 5} minutes
+                                                <option value="">Select a range</option>
+                                                {availableTimes.map((time, index) => (
+                                                    <option key={index} value={time}>
+                                                        {time}
                                                     </option>
                                                 ))}
                                             </select>
-                                            <button
-                                                className="sendProposalButton"
-                                                onClick={handleSendAppointmentProposal}
-                                            >
-                                                Send Appointment Proposal
-                                            </button>
-                                            {responseMessage && (
-                                                <p className="responseMessage">{responseMessage}</p>
+                                            {selectedTimeRange && (
+                                                <>
+                                                    <h3>Select Start Time</h3>
+                                                    <input
+                                                        type="time"
+                                                        value={startTime}
+                                                        onChange={handleStartTimeChange}
+                                                        className="appointmentStartTimeInput"
+                                                        required
+                                                    />
+                                                    <h3>Select Appointment Duration (in minutes)</h3>
+                                                    <select
+                                                        value={appointmentDuration}
+                                                        onChange={handleDurationChange}
+                                                        className="appointmentDurationSelect"
+                                                        required
+                                                    >
+                                                        {[...Array(Math.floor(maxDuration / 5)).keys()].map((i) => (
+                                                            <option key={i} value={(i + 1) * 5}>
+                                                                {(i + 1) * 5} minutes
+                                                            </option>
+                                                        ))}
+                                                    </select>
+                                                    <button
+                                                        className="sendProposalButton"
+                                                        onClick={handleSendAppointmentProposal}
+                                                    >
+                                                        Send Appointment Proposal
+                                                    </button>
+                                                    {responseMessage && (
+                                                        <p className="responseMessage">{responseMessage}</p>
+                                                    )}
+                                                </>
                                             )}
                                         </>
                                     )}
-                                </>
+                                </div>
                             )}
                         </div>
                     )}
-                </div>
+                </>
             )}
         </div>
     );
