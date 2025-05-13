@@ -1,24 +1,24 @@
 .search-patients {
-    font-family: Arial, sans-serif;
+    font-family: 'Inter', sans-serif;
     padding: 20px;
     max-width: 800px;
     margin: 0 auto;
-    background-color: #f9f9f9;
-    border-radius: 8px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    background-color: var(--secondary-color);
+    border-radius: var(--border-radius);
+    box-shadow: var(--card-shadow);
 }
 
 .search-patients h2 {
     text-align: center;
     margin-bottom: 20px;
-    color: #333;
+    color: var(--primary-color);
 }
 
 .search-input {
     width: 100%;
     padding: 10px;
     margin-bottom: 15px;
-    border: 1px solid #ddd;
+    border: 1px solid rgba(44, 122, 123, 0.2);
     border-radius: 4px;
 }
 
@@ -26,7 +26,7 @@
     display: block;
     width: 100%;
     padding: 10px;
-    background-color: #007bff;
+    background-color: var(--primary-color);
     color: white;
     border: none;
     border-radius: 4px;
@@ -36,9 +36,9 @@
 }
 
 .search-button:hover {
-    background-color: #0056b3;
+    background-color: var(--primary-dark);
     transform: translateY(-5px);
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 4px 15px rgba(44, 122, 123, 0.3);
 }
 
 .error-message {
@@ -55,8 +55,8 @@
 }
 
 .patient-card {
-    background-color: white;
-    border: 1px solid #ddd;
+    background-color: var(--text-white);
+    border: 1px solid rgba(44, 122, 123, 0.1);
     border-radius: 4px;
     padding: 15px;
     width: 100%;
@@ -67,12 +67,12 @@
 
 .patient-card:hover {
     transform: translateY(-5px);
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 4px 15px rgba(44, 122, 123, 0.2);
 }
 
 .patient-card h3 {
     margin: 0 0 10px;
-    color: #555;
+    color: var(--primary-color);
 }
 
 .patient-card p {
@@ -81,8 +81,8 @@
 }
 
 .view-records-button {
-    background-color: #28a745;
-    color: white;
+    background-color:#2c7a7b;
+    color: var(--text-white);
     border: none;
     padding: 8px 12px;
     border-radius: 4px;
@@ -91,9 +91,9 @@
 }
 
 .view-records-button:hover {
-    background-color: #218838;
-    transform: translateY(-5px);
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    background-color: var(--primary-color);
+    transform: translateY(-3px);
+    box-shadow: 0 4px 15px rgba(44, 122, 123, 0.2);
 }
 
 .medical-records {
@@ -217,11 +217,11 @@
 }
 
 .sp-modal-title {
-    color: #2c3e50;
+    color: var(--primary-dark);
     text-align: center;
     margin-bottom: 20px;
     padding-bottom: 15px;
-    border-bottom: 2px solid #56ab2f;
+    border-bottom: 2px solid var(--primary-color);
     font-size: 24px;
 }
 
@@ -246,8 +246,8 @@
 }
 
 .record-header {
-    background-color: #56ab2f;
-    color: white;
+    background-color: var(--primary-color);
+    color: var(--text-white);
     padding: 12px 15px;
 }
 
@@ -272,11 +272,11 @@
 }
 
 .record-section h4 {
-    color: #2c3e50;
+    color: var(--primary-dark);
     margin-top: 0;
     margin-bottom: 12px;
     padding-bottom: 8px;
-    border-bottom: 1px solid #eaeaea;
+    border-bottom: 1px solid rgba(44, 122, 123, 0.1);
     font-size: 16px;
 }
 
@@ -293,7 +293,7 @@
 }
 
 .treatment-section {
-    background-color: #f0f9ff;
+    background-color: rgba(79, 209, 197, 0.1); /* Very light version of primary-light */
 }
 
 .no-treatment {
@@ -306,6 +306,86 @@
     padding: 30px;
     color: #666;
     font-style: italic;
+}
+
+/* Records list in modal */
+.records-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 16px;
+    margin-top: 20px;
+}
+
+.recordCard {
+    background-color: var(--secondary-color);
+    border-radius: 10px;
+    padding: 16px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    transition: all 0.2s ease-in-out;
+    cursor: pointer;
+    border-left: 4px solid var(--primary-color);
+}
+
+.recordCard:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 5px 12px rgba(0, 0, 0, 0.1);
+}
+
+.recordCard h4 {
+    margin-top: 0;
+    margin-bottom: 12px;
+    color: var(--primary-dark);
+    font-size: 16px;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 8px;
+}
+
+.record-indicators {
+    display: flex;
+    gap: 8px;
+    margin-top: 10px;
+    margin-bottom: 10px;
+}
+
+.record-indicator {
+    display: inline-block;
+    font-size: 12px;
+    padding: 3px 8px;
+    border-radius: 12px;
+    font-weight: 500;
+}
+
+.record-indicator.lab {
+    background-color: rgba(52, 152, 219, 0.15);
+    color: #2980b9;
+}
+
+.record-indicator.attachment {
+    background-color: rgba(46, 204, 113, 0.15);
+    color: #27ae60;
+}
+
+.recordCard p {
+    margin: 8px 0;
+    font-size: 14px;
+    color: var(--text-dark);
+}
+
+.view-details-button {
+    margin-top: 12px;
+    padding: 8px 16px;
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    width: 100%;
+}
+
+.view-details-button:hover {
+    background-color: var(--primary-dark);
 }
 
 /* Responsive adjustments */

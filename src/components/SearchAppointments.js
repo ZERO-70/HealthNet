@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import '../styles/SearchAppointment.css';
 import LoadingSpinner from './LoadingSpinner';
 import { useLoading } from '../hooks/useLoading';
@@ -10,7 +10,7 @@ function SearchAppointment() {
     const [errorMessage, setErrorMessage] = useState('');
     const { loading, withLoading } = useLoading();
 
-    const fetchAppointments = async () => {
+    const fetchAppointments = useCallback(async () => {
         try {
             const token = localStorage.getItem('authToken');
             const response = await fetch('https://frozen-sands-51239-b849a8d5756e.herokuapp.com/appointment', {
@@ -48,7 +48,7 @@ function SearchAppointment() {
             setErrorMessage(error.message);
             setFilteredAppointments([]);
         }
-    };
+    }, []);
 
     const fetchPatientName = async (id, token) => {
         try {
@@ -109,7 +109,7 @@ function SearchAppointment() {
 
     useEffect(() => {
         withLoading(fetchAppointments)();
-    }, [withLoading]);
+    }, [withLoading, fetchAppointments]);
 
     const getAppointmentCardColor = (appointment) => {
         if (appointment.is_pending && !appointment.is_approved) {

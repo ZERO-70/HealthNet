@@ -266,3 +266,106 @@
 .inventoryCard.lightyellow {
     background-color: lightyellow;
 }
+
+/* ManageInventory.css - Modern Design with Teal/Sage Theme */
+/* This file contains specific styles for the ManageInventory component */
+/* Most shared styles are in StaffComponents.css */
+
+/* Inventory Grid Layout */
+.inventory-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 1.5rem;
+  margin-top: 1.5rem;
+}
+
+/* Inventory Card */
+.inventory-card {
+  background-color: var(--text-white);
+  border-radius: var(--border-radius);
+  padding: 1.5rem;
+  box-shadow: var(--card-shadow);
+  transition: all var(--transition-speed) ease;
+  border-top: 4px solid var(--primary-light);
+  display: flex;
+  flex-direction: column;
+}
+
+/* Expiry Status Styles */
+.inventory-card.expiry-expired {
+  border-top-color: var(--error-color);
+}
+
+.inventory-card.expiry-warning {
+  border-top-color: var(--accent-color);
+}
+
+.inventory-card.expiry-good {
+  border-top-color: var(--success-color);
+}
+
+.inventory-card.expiry-unknown {
+  border-top-color: var(--text-light);
+}
+
+/* Card Content Layout */
+.card-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 1rem;
+  gap: 0.75rem;
+}
+
+.card-icon {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(91, 123, 122, 0.1);
+  border-radius: 8px;
+  color: var(--primary-color);
+  font-size: 1.1rem;
+}
+
+/* Status Badge Styles */
+.status-good {
+  background-color: rgba(106, 155, 120, 0.15);
+  color: var(--success-color);
+}
+
+.status-warning {
+  background-color: rgba(194, 132, 110, 0.15);
+  color: var(--accent-color);
+}
+
+.status-expired {
+  background-color: rgba(214, 121, 103, 0.15);
+  color: var(--error-color);
+}
+
+.status-unknown {
+  background-color: rgba(110, 120, 120, 0.15);
+  color: var(--text-light);
+}
+
+.status-badge {
+  margin-left: 0.5rem;
+  font-size: 0.75rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: 20px;
+  display: inline-block;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .inventory-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1200px) {
+  .inventory-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}

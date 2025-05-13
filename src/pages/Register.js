@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom'; // Import useNavigate
+import { useNavigate, Link } from 'react-router-dom';
+import '../styles/Register.css';
 
 function Register() {
     const [userType, setUserType] = useState(''); // To track if the user is a patient or doctor
     const [formData, setFormData] = useState({});
     const [imageBase64, setImageBase64] = useState(''); // To store Base64 encoded image
+    const [imagePreview, setImagePreview] = useState(''); // For displaying image preview
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [responseMessage, setResponseMessage] = useState('');
@@ -25,7 +27,9 @@ function Register() {
         const reader = new FileReader();
 
         reader.onloadend = () => {
-            setImageBase64(reader.result.split(',')[1]); // Extract Base64 data
+            const result = reader.result;
+            setImagePreview(result); // Set the full data URL for preview
+            setImageBase64(result.split(',')[1]); // Extract Base64 data
         };
 
         if (file) {
@@ -89,47 +93,91 @@ function Register() {
         }
     };
 
+    // Reset form and start over
+    const handleReset = () => {
+        setUserType('');
+        setFormData({});
+        setImageBase64('');
+        setImagePreview('');
+        setUsername('');
+        setPassword('');
+        setResponseMessage('');
+        setErrorMessage('');
+    };
+
     return (
         <div className="wrapper">
             <div className="container">
-                <h1 className="title">Register</h1>
+                <h1 className="title">Create Your Account</h1>
                 {!userType && (
                     <div className="userTypeSelection">
                         <p>Are you registering as a:</p>
-                        <button onClick={() => setUserType('PATIENT')} className="button">
-                            Patient
-                        </button>
-                        <button onClick={() => setUserType('DOCTOR')} className="button">
-                            Doctor
-                        </button>
+                        <div style={{ display: 'flex', gap: '20px' }}>
+                            <button onClick={() => setUserType('PATIENT')} className="button">
+                                Patient
+                            </button>
+                            <button onClick={() => setUserType('DOCTOR')} className="button">
+                                Doctor
+                            </button>
+                        </div>
                     </div>
                 )}
                 {userType && (
                     <form onSubmit={handleSubmit} className="form">
                         <h2>Register as a {userType}</h2>
-                        <input
-                            type="file"
-                            name="image"
-                            accept="image/*"
-                            onChange={handleImageUpload}
-                            required
-                        />
+                        
+                        <div className="image-upload-container">
+                            <div className="file-input-container">
+                                <label className="file-input-label">
+                                    <i className="fas fa-camera"></i>
+                                    Choose Profile Photo
+                                    <input
+                                        type="file"
+                                        name="image"
+                                        accept="image/*"
+                                        onChange={handleImageUpload}
+                                        required
+                                        style={{ display: 'none' }}
+                                    />
+                                </label>
+                            </div>
+                            {imagePreview && (
+                                <img 
+                                    src={imagePreview} 
+                                    alt="Profile Preview" 
+                                    className="upload-preview" 
+                                />
+                            )}
+                        </div>
+
                         {userType === 'PATIENT' && (
-                            <>
+                            <div className="form-grid">
                                 <input
                                     type="text"
                                     name="name"
-                                    placeholder="Name"
+                                    placeholder="Full Name"
                                     required
                                     onChange={handleChange}
                                 />
-                                <input
-                                    type="text"
+                                <select 
                                     name="gender"
-                                    placeholder="Gender"
                                     required
                                     onChange={handleChange}
-                                />
+                                    style={{
+                                        height: '48px',
+                                        borderRadius: '8px',
+                                        border: '1px solid rgba(0, 0, 0, 0.08)',
+                                        padding: '0 1rem',
+                                        backgroundColor: 'var(--secondary-color)',
+                                        boxShadow: 'var(--input-shadow)',
+                                        color: 'var(--text-dark)'
+                                    }}
+                                >
+                                    <option value="">Select Gender</option>
+                                    <option value="Male">Male</option>
+                                    <option value="Female">Female</option>
+                                    <option value="Other">Other</option>
+                                </select>
                                 <input
                                     type="number"
                                     name="age"
@@ -161,35 +209,47 @@ function Register() {
                                 <input
                                     type="text"
                                     name="weight"
-                                    placeholder="Weight"
+                                    placeholder="Weight (kg)"
                                     required
                                     onChange={handleChange}
                                 />
                                 <input
                                     type="text"
                                     name="height"
-                                    placeholder="Height"
+                                    placeholder="Height (cm)"
                                     required
                                     onChange={handleChange}
                                 />
-                            </>
+                            </div>
                         )}
                         {userType === 'DOCTOR' && (
-                            <>
+                            <div className="form-grid">
                                 <input
                                     type="text"
                                     name="name"
-                                    placeholder="Name"
+                                    placeholder="Full Name"
                                     required
                                     onChange={handleChange}
                                 />
-                                <input
-                                    type="text"
+                                <select 
                                     name="gender"
-                                    placeholder="Gender"
                                     required
                                     onChange={handleChange}
-                                />
+                                    style={{
+                                        height: '48px',
+                                        borderRadius: '8px',
+                                        border: '1px solid rgba(0, 0, 0, 0.08)',
+                                        padding: '0 1rem',
+                                        backgroundColor: 'var(--secondary-color)',
+                                        boxShadow: 'var(--input-shadow)',
+                                        color: 'var(--text-dark)'
+                                    }}
+                                >
+                                    <option value="">Select Gender</option>
+                                    <option value="Male">Male</option>
+                                    <option value="Female">Female</option>
+                                    <option value="Other">Other</option>
+                                </select>
                                 <input
                                     type="number"
                                     name="age"
@@ -225,7 +285,7 @@ function Register() {
                                     required
                                     onChange={handleChange}
                                 />
-                            </>
+                            </div>
                         )}
                         <h3>Set up your credentials</h3>
                         <input
@@ -242,11 +302,24 @@ function Register() {
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
                         />
-                        <button type="submit" className="button">Register</button>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', gap: '15px', marginTop: '10px' }}>
+                            <button type="button" onClick={handleReset} className="button" style={{ flex: '1', background: 'linear-gradient(to right, #9ca3a3, #c6cccc)' }}>
+                                Reset
+                            </button>
+                            <button type="submit" className="button" style={{ flex: '2' }}>
+                                Complete Registration
+                            </button>
+                        </div>
                     </form>
                 )}
                 {responseMessage && <p className="successMessage">{responseMessage}</p>}
                 {errorMessage && <p className="errorMessage">{errorMessage}</p>}
+                
+                <div className="login-link-container">
+                    <Link to="/" className="login-link">
+                        Already have an account? Log in
+                    </Link>
+                </div>
             </div>
         </div>
     );

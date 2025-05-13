@@ -238,3 +238,86 @@
         transform: translateY(0);
     }
 }
+
+/* Custom table styles for medical records */
+.data-table th:nth-child(4), 
+.data-table td:nth-child(4) {
+    max-width: 250px;
+    white-space: normal;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Diagnosis text can be longer, so allow wrapping */
+.data-table td:nth-child(4) {
+    white-space: normal;
+    min-width: 200px;
+}
+
+/* Blood pressure column */
+.data-table th:nth-child(5), 
+.data-table td:nth-child(5) {
+    white-space: nowrap;
+}
+
+/* Custom form styles for medical records */
+.form-textarea.diagnosis {
+    min-height: 150px;
+}
+
+/* Custom animation for the medical record cards */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.medical-record-animation {
+    animation: fadeIn 0.4s ease-in-out;
+}
+
+/* Create tab styles */
+.form-container.medical-record-form {
+    max-width: 800px;
+}
+
+/* Add spinning animation for refresh icon */
+.icon-spin {
+    animation: spin 1.5s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Update button styling for the refresh button */
+.secondary {
+    background-color: var(--bg-secondary);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+}
+
+.secondary:hover {
+    background-color: var(--bg-secondary-hover);
+}
+
+/* Responsive adjustments */
+@media (max-width: 992px) {
+    .data-table th:nth-child(2),
+    .data-table td:nth-child(2),
+    .data-table th:nth-child(5),
+    .data-table td:nth-child(5) {
+        display: none;
+    }
+}
+
+@media (max-width: 768px) {
+    .data-table th:nth-child(3),
+    .data-table td:nth-child(3) {
+        display: none;
+    }
+    
+    .form-container.medical-record-form {
+        padding: 1.25rem;
+    }
+}

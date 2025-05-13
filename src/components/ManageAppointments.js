@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import '../styles/ManageAppointments.css'; // Custom CSS for styling
 import LoadingSpinner from './LoadingSpinner'; // Import loading spinner component
 
@@ -20,34 +20,7 @@ function ManageAppointments() {
     const [selectedAppointment, setSelectedAppointment] = useState(null); // To track selected appointment
     const [errorMessage, setErrorMessage] = useState('');
 
-    useEffect(() => {
-        fetchAppointments();
-    }, []);
-
-    const fetchPatientName = async (patientId, token) => {
-        console.log(`Fetching patient name for patient_id: ${patientId}`);
-        try {
-            const response = await fetch(`https://frozen-sands-51239-b849a8d5756e.herokuapp.com/patient/${patientId}`, {
-                method: 'GET',
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json',
-                },
-            });
-
-            if (!response.ok) {
-                throw new Error('Failed to fetch patient details.');
-            }
-
-            const patient = await response.json();
-            return patient.name;
-        } catch (error) {
-            console.error(`Error fetching patient name for ID ${patientId}:`, error);
-            return 'Unknown Patient';
-        }
-    };
-
-    const fetchAppointments = async () => {
+    const fetchAppointments = useCallback(async () => {
         setLoading(true);
         try {
             const token = localStorage.getItem('authToken');
@@ -90,6 +63,33 @@ function ManageAppointments() {
             setErrorMessage(error.message);
         } finally {
             setLoading(false);
+        }
+    }, []);
+
+    useEffect(() => {
+        fetchAppointments();
+    }, [fetchAppointments]);
+
+    const fetchPatientName = async (patientId, token) => {
+        console.log(`Fetching patient name for patient_id: ${patientId}`);
+        try {
+            const response = await fetch(`https://frozen-sands-51239-b849a8d5756e.herokuapp.com/patient/${patientId}`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                },
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to fetch patient details.');
+            }
+
+            const patient = await response.json();
+            return patient.name;
+        } catch (error) {
+            console.error(`Error fetching patient name for ID ${patientId}:`, error);
+            return 'Unknown Patient';
         }
     };
 

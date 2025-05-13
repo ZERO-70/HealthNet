@@ -1,16 +1,16 @@
 .manage-availability {
-    font-family: 'Arial', sans-serif;
+    font-family: 'Inter', sans-serif;
     padding: 20px;
-    background-color: #f9f9f9;
-    border-radius: 8px;
+    background-color: var(--secondary-color);
+    border-radius: var(--border-radius);
     max-width: 600px;
     margin: 0 auto;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    box-shadow: var(--card-shadow);
 }
 
 .manage-availability h2 {
     text-align: center;
-    color: #333;
+    color: var(--primary-color);
     margin-bottom: 20px;
 }
 
@@ -23,16 +23,16 @@
 .day-row {
     display: flex;
     flex-direction: column;
-    background-color: #fff;
+    background-color: var(--text-white);
     padding: 15px;
-    border: 1px solid #ddd;
+    border: 1px solid rgba(44, 122, 123, 0.1);
     border-radius: 8px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
 .day-row h3 {
     margin: 0 0 10px 0;
-    color: #555;
+    color: var(--primary-dark);
 }
 
 .day-row label {
@@ -51,12 +51,12 @@
 }
 
 .day-row input:focus {
-    border-color: #007bff;
-    box-shadow: 0 0 3px rgba(0, 123, 255, 0.5);
+    border-color: var(--primary-color);
+    box-shadow: 0 0 3px rgba(44, 122, 123, 0.5);
 }
 
 .save-button {
-    background-color: #56ab2f;
+    background-color: var(--primary-color);
     color: white;
     border: none;
     padding: 10px 15px;
@@ -65,13 +65,13 @@
     align-self: center;
     cursor: pointer;
     transition: transform 0.2s, box-shadow 0.2s;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 6px rgba(44, 122, 123, 0.1);
 }
 
 .save-button:hover {
-    background-color: #3a8b1e;
-    transform: translateY(-5px);
-    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+    background-color: var(--primary-dark);
+    transform: translateY(-3px);
+    box-shadow: 0 6px 12px rgba(44, 122, 123, 0.15);
 }
 
 .success-message {

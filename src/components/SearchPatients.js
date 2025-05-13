@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import ReactDOM from 'react-dom';
 import '../styles/SearchPatients.css';
+import '../styles/PatientMedicalRecords.css'; // Import patient medical records styles
 import LoadingSpinner from './LoadingSpinner';
+import MedicalRecordDetail from './MedicalRecordDetail';
 import { useLoading } from '../hooks/useLoading';
 
 function SearchPatients() {
@@ -9,10 +11,10 @@ function SearchPatients() {
     const [patients, setPatients] = useState([]);
     const [filteredPatients, setFilteredPatients] = useState([]);
     const [medicalRecords, setMedicalRecords] = useState([]);
-    const [treatmentDetails, setTreatmentDetails] = useState([]); // For storing treatment details
-    const [selectedPatient, setSelectedPatient] = useState(null); // For showing patient name in the modal
-    const [showModal, setShowModal] = useState(false);
+    const [selectedPatient, setSelectedPatient] = useState(null);
+    const [selectedRecord, setSelectedRecord] = useState(null);
     const [errorMessage, setErrorMessage] = useState('');
+    const [viewingRecords, setViewingRecords] = useState(false);
     const { loading, withLoading } = useLoading();
     const { loading: recordsLoading, withLoading: withRecordsLoading } = useLoading();
 
@@ -35,13 +37,13 @@ function SearchPatients() {
 
     // Scroll to top and disable background scroll when modal is open
     useEffect(() => {
-        if (showModal) {
+        if (viewingRecords) {
             window.scrollTo(0, 0);
             document.body.style.overflow = 'hidden';
         } else {
             document.body.style.overflow = '';
         }
-    }, [showModal]);
+    }, [viewingRecords]);
 
     const fetchAllPatients = async () => {
         const fetchPatients = async () => {
@@ -83,7 +85,9 @@ function SearchPatients() {
                     throw new Error('Authentication token is missing. Please log in again.');
                 }
 
-                const response = await fetch(`https://frozen-sands-51239-b849a8d5756e.herokuapp.com/medical_record/patient/${patientId}`, {
+                console.log('Fetching medical records for patient ID:', patientId);
+                // Include the patient ID in the URL path to access specific patient records
+                const response = await fetch(`https://frozen-sands-51239-b849a8d5756e.herokuapp.com/medical_record/${patientId}`, {
                     method: 'GET',
                     headers: {
                         'Authorization': `Bearer ${token}`,
@@ -96,22 +100,85 @@ function SearchPatients() {
                 }
 
                 const data = await response.json();
-                setMedicalRecords(data);
-                setSelectedPatient(patientName); // Set the patient's name for the modal title
-
-                // Fetch treatment details for each medical record
-                const treatments = await Promise.all(
-                    data.map(async (record) => {
-                        if (record.treatement_id) {
-                            const treatment = await fetchTreatmentDetails(record.treatement_id);
-                            return { ...treatment, treatement_id: record.treatement_id }; // Include treatement_id for mapping
+                console.log('Received medical records data:', data);
+                
+                // Additional debug logging to understand the data structure
+                console.log('Data type:', typeof data);
+                console.log('Is array?', Array.isArray(data));
+                if (Array.isArray(data)) {
+                    console.log('Array length:', data.length);
+                    console.log('Sample first record:', data[0]);
+                } else if (typeof data === 'object') {
+                    console.log('Object keys:', Object.keys(data));
+                    // Check if the data might be nested under a property
+                    const possibleArrayProps = Object.keys(data).filter(key => Array.isArray(data[key]));
+                    console.log('Possible array properties:', possibleArrayProps);
+                }
+                
+                // Ensure data is treated as an array, or extract it from the response if it's nested
+                let recordsArray = [];
+                if (Array.isArray(data)) {
+                    recordsArray = data;
+                } else if (typeof data === 'object') {
+                    // Check if records might be nested under a property
+                    for (const key in data) {
+                        if (Array.isArray(data[key]) && data[key].length > 0) {
+                            recordsArray = data[key];
+                            break;
                         }
-                        return null;
-                    })
-                );
-
-                setTreatmentDetails(treatments.filter((treatment) => treatment !== null)); // Exclude null values
-                setShowModal(true); // Open the modal
+                    }
+                    // If we didn't find an array, but the object itself has expected record properties
+                    // it might be a single record, so wrap it
+                    if (recordsArray.length === 0 && (data.id || data.record_id || data.recordId)) {
+                        recordsArray = [data];
+                    }
+                }
+                
+                console.log('Processed records array:', recordsArray);
+                
+                // Check if recordsArray is empty after processing
+                if (!recordsArray || recordsArray.length === 0) {
+                    console.log('No medical records found for this patient');
+                    setMedicalRecords([]);
+                    setSelectedPatient(patientName);
+                    setViewingRecords(true);
+                    return;
+                }
+                
+                // Normalize the data to ensure consistent property names
+                const normalizedRecords = recordsArray.map(record => ({
+                    // Standard fields with normalized names
+                    recordId: record.recordId || record.record_id || record.id,
+                    patientId: record.patientId || record.patient_id,
+                    doctorId: record.doctorId || record.doctor_id,
+                    departmentId: record.departmentId || record.department_id,
+                    treatmentId: record.treatmentId || record.treatement_id,
+                    recordType: record.recordType || record.record_type || record.type,
+                    title: record.title,
+                    diagnosis: record.diagnosis,
+                    notes: record.notes,
+                    createdAt: record.createdAt || record.created_at,
+                    updatedAt: record.updatedAt || record.updated_at,
+                    recordDate: record.recordDate || record.record_date || record.date,
+                    
+                    // Vital signs
+                    bloodPressure: record.bloodPressure || record.bloodpressure || record.blood_pressure,
+                    heartRate: record.heartRate || record.heart_rate,
+                    respiratoryRate: record.respiratoryRate || record.respiratory_rate,
+                    temperature: record.temperature,
+                    oxygenSaturation: record.oxygenSaturation || record.oxygen_saturation,
+                    height: record.height,
+                    weight: record.weight,
+                    
+                    // Arrays
+                    attachments: record.attachments || [],
+                    labResults: record.labResults || record.lab_results || []
+                }));
+                
+                console.log('Normalized records:', normalizedRecords);
+                setMedicalRecords(normalizedRecords);
+                setSelectedPatient(patientName); // Set the patient's name for the modal title
+                setViewingRecords(true); // Open the modal
             } catch (error) {
                 console.error('Error fetching medical records:', error);
                 setErrorMessage('Failed to fetch medical records.');
@@ -121,33 +188,16 @@ function SearchPatients() {
         await withRecordsLoading(getMedicalRecords)();
     };
 
-    const fetchTreatmentDetails = async (treatmentId) => {
-        try {
-            const token = localStorage.getItem('authToken');
-            const response = await fetch(`https://frozen-sands-51239-b849a8d5756e.herokuapp.com/treatement/${treatmentId}`, {
-                method: 'GET',
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json',
-                },
-            });
-
-            if (!response.ok) {
-                throw new Error('Failed to fetch treatment details.');
-            }
-
-            return await response.json();
-        } catch (error) {
-            console.error('Error fetching treatment details:', error);
-            return null;
-        }
+    const closeModal = () => {
+        setViewingRecords(false); // Close the modal
+        setMedicalRecords([]); // Clear the records
+        setSelectedPatient(null); // Clear the selected patient
+        setSelectedRecord(null); // Clear the selected record
     };
 
-    const closeModal = () => {
-        setShowModal(false); // Close the modal
-        setMedicalRecords([]); // Clear the records
-        setTreatmentDetails([]); // Clear the treatment details
-        setSelectedPatient(null); // Clear the selected patient
+    const formatDate = (dateString) => {
+        const date = new Date(dateString);
+        return date.toLocaleDateString();
     };
 
     return (
@@ -172,9 +222,9 @@ function SearchPatients() {
                         filteredPatients.map((patient) => (
                             <div key={patient.id} className="patient-card">
                                 <h3>{patient.name}</h3>
-                                <p>ID: {patient.id}</p>
-                                <p>Age: {patient.age}</p>
-                                <p>Contact: {patient.contact_info}</p>
+                                <p key={`id-${patient.id}`}>ID: {patient.id}</p>
+                                <p key={`age-${patient.id}`}>Age: {patient.age}</p>
+                                <p key={`contact-${patient.id}`}>Contact: {patient.contact_info}</p>
                                 <button
                                     onClick={() => fetchMedicalRecords(patient.id, patient.name)}
                                     className="view-records-button"
@@ -190,8 +240,8 @@ function SearchPatients() {
                 </div>
             )}
 
-            {/* Modal portal for displaying medical records and treatments */}
-            {showModal && ReactDOM.createPortal(
+            {/* Modal portal for displaying medical records */}
+            {viewingRecords && ReactDOM.createPortal(
                 <div className="sp-modal-overlay" onClick={closeModal}>
                     <div className="sp-modal-content" onClick={(e) => e.stopPropagation()}>
                         <span className="sp-close-button" onClick={closeModal}>&times;</span>
@@ -199,45 +249,40 @@ function SearchPatients() {
                         
                         {recordsLoading && <LoadingSpinner />}
                         
-                        {!recordsLoading && medicalRecords.length > 0 ? (
-                            <div className="medical-records-container">
-                                {medicalRecords.map((record) => {
-                                    const treatmentDetail = treatmentDetails.find(
-                                        (treatment) => treatment.treatement_id === record.treatement_id
-                                    );
-                                    return (
-                                        <div key={record.record_id} className="medical-record-card">
-                                            <div className="record-header">
-                                                <h3>{record.date} - Record #{record.record_id}</h3>
-                                            </div>
-                                            <div className="record-body">
-                                                <div className="record-section">
-                                                    <h4>Diagnosis & Vitals</h4>
-                                                    <p><span className="label">Diagnosis:</span> {record.diagnosis}</p>
-                                                    <p><span className="label">Blood Pressure:</span> {record.bloodpressure}</p>
-                                                </div>
-                                                
-                                                {treatmentDetail ? (
-                                                    <div className="record-section treatment-section">
-                                                        <h4>Treatment Information</h4>
-                                                        <p><span className="label">Treatment Name:</span> {treatmentDetail.name || 'N/A'}</p>
-                                                        <p><span className="label">Administered By:</span> Doctor #{treatmentDetail.doctor_id}</p>
-                                                        <p><span className="label">Department:</span> {record.department_id}</p>
+                        {!recordsLoading && (
+                            <div className="medicalRecords">
+                                {selectedRecord ? (
+                                    <MedicalRecordDetail 
+                                        record={selectedRecord}
+                                        userRole="DOCTOR"
+                                        onClose={() => setSelectedRecord(null)}
+                                    />
+                                ) : (
+                                    <>
+                                        {/* Records list */}
+                                        {medicalRecords.length === 0 ? (
+                                            <p className="loadingMessage">No medical records found for this patient.</p>
+                                        ) : (
+                                            <div className="recordsList">
+                                                {medicalRecords.map((record) => (
+                                                    <div 
+                                                        key={record.recordId || record.record_id} 
+                                                        className="recordCard"
+                                                        onClick={() => setSelectedRecord(record)}
+                                                    >
+                                                        <p><strong>Date:</strong> {formatDate(record.recordDate || record.record_date || record.date)}</p>
+                                                        <p><strong>Title:</strong> {record.title || 'N/A'}</p>
+                                                        <p><strong>Type:</strong> {record.recordType || record.record_type || 'N/A'}</p>
+                                                        <p><strong>Diagnosis:</strong> {record.diagnosis || 'None'}</p>
+                                                        {(record.bloodPressure || record.blood_pressure) && 
+                                                            <p><strong>Blood Pressure:</strong> {record.bloodPressure || record.blood_pressure}</p>
+                                                        }
                                                     </div>
-                                                ) : (
-                                                    <div className="record-section treatment-section">
-                                                        <h4>Treatment Information</h4>
-                                                        <p className="no-treatment">No treatment details available</p>
-                                                    </div>
-                                                )}
+                                                ))}
                                             </div>
-                                        </div>
-                                    );
-                                })}
-                            </div>
-                        ) : !recordsLoading && (
-                            <div className="no-records-message">
-                                <p>No medical records found for this patient.</p>
+                                        )}
+                                    </>
+                                )}
                             </div>
                         )}
                     </div>

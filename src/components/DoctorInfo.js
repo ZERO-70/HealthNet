@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useLoading } from '../hooks/useLoading';
 import LoadingSpinner from './LoadingSpinner';
+import { motion } from 'framer-motion';
+import { FiUser, FiMail, FiPhone, FiMapPin, FiCalendar, FiActivity } from 'react-icons/fi';
 import '../styles/DoctorInfo.css'; // CSS for the DoctorInfo component
 
 function DoctorInfo() {
@@ -8,7 +10,33 @@ function DoctorInfo() {
     const [errorMessage, setErrorMessage] = useState('');
     const { loading, withLoading } = useLoading();
 
-    // separated fetch to wrap with loading
+    // Animation variants
+    const containerVariants = {
+        hidden: { opacity: 0 },
+        visible: {
+            opacity: 1,
+            transition: {
+                duration: 0.6,
+                when: "beforeChildren",
+                staggerChildren: 0.1
+            }
+        }
+    };
+
+    const itemVariants = {
+        hidden: { y: 20, opacity: 0 },
+        visible: {
+            y: 0,
+            opacity: 1,
+            transition: {
+                type: "spring",
+                stiffness: 80,
+                damping: 12
+            }
+        }
+    };
+
+    // Separated fetch to wrap with loading
     const fetchDoctorInfo = async () => {
         try {
             const token = localStorage.getItem('authToken');
@@ -51,49 +79,127 @@ function DoctorInfo() {
     }, [withLoading]);
 
     if (loading) return <LoadingSpinner />;
-    if (errorMessage) return <p className="errorMessage">{errorMessage}</p>;
+    if (errorMessage) return (
+        <div className="error-container">
+            <div className="error-icon">⚠️</div>
+            <p className="error-message">{errorMessage}</p>
+            <button className="retry-button" onClick={() => withLoading(fetchDoctorInfo)()}>
+                Try Again
+            </button>
+        </div>
+    );
     if (!doctorData || Object.keys(doctorData).length === 0) return <LoadingSpinner />;
 
     return (
-        <div className="doctorInfo">
-            <h2 className="infoTitle">Your Information</h2>
-            <div className="imageContainer">
-                {doctorData.image && doctorData.image_type ? (
-                    <img
-                        src={`data:${doctorData.image_type};base64,${doctorData.image}`}
-                        alt="Doctor"
-                        className="profileImage"
-                    />
-                ) : (
-                    <div className="placeholderCircle">
-                        <p className="placeholderText">No Image</p>
+        <motion.div 
+            className="doctor-info-container"
+            variants={containerVariants}
+            initial="hidden"
+            animate="visible"
+        >
+            <motion.div className="profile-header" variants={itemVariants}>
+                <div className="profile-image-container">
+                    {doctorData.image && doctorData.image_type ? (
+                        <img
+                            src={`data:${doctorData.image_type};base64,${doctorData.image}`}
+                            alt="Doctor"
+                            className="profile-image"
+                        />
+                    ) : (
+                        <div className="profile-image-placeholder">
+                            <FiUser className="placeholder-icon" />
+                        </div>
+                    )}
+                </div>
+                <div className="profile-title">
+                    <h2>{doctorData.name || 'Doctor Name'}</h2>
+                    <p className="profile-subtitle">{doctorData.specialization || 'Specialist'}</p>
+                </div>
+            </motion.div>
+
+            <div className="info-section-container">
+                <motion.div className="info-section" variants={itemVariants}>
+                    <h3 className="section-title">Personal Information</h3>
+                    <div className="info-grid">
+                        <div className="info-item">
+                            <div className="info-icon"><FiUser /></div>
+                            <div className="info-content">
+                                <span className="info-label">Full Name</span>
+                                <span className="info-value">{doctorData.name || 'N/A'}</span>
+                            </div>
+                        </div>
+                        <div className="info-item">
+                            <div className="info-icon"><FiCalendar /></div>
+                            <div className="info-content">
+                                <span className="info-label">Age</span>
+                                <span className="info-value">{doctorData.age || 'N/A'}</span>
+                            </div>
+                        </div>
+                        <div className="info-item">
+                            <div className="info-icon"><FiUser /></div>
+                            <div className="info-content">
+                                <span className="info-label">Gender</span>
+                                <span className="info-value">{doctorData.gender || 'N/A'}</span>
+                            </div>
+                        </div>
+                        <div className="info-item">
+                            <div className="info-icon"><FiCalendar /></div>
+                            <div className="info-content">
+                                <span className="info-label">Birth Date</span>
+                                <span className="info-value">{doctorData.birthdate || 'N/A'}</span>
+                            </div>
+                        </div>
                     </div>
-                )}
+                </motion.div>
+
+                <motion.div className="info-section" variants={itemVariants}>
+                    <h3 className="section-title">Contact Information</h3>
+                    <div className="info-grid">
+                        <div className="info-item">
+                            <div className="info-icon"><FiPhone /></div>
+                            <div className="info-content">
+                                <span className="info-label">Phone</span>
+                                <span className="info-value">{doctorData.contact_info || 'N/A'}</span>
+                            </div>
+                        </div>
+                        <div className="info-item">
+                            <div className="info-icon"><FiMail /></div>
+                            <div className="info-content">
+                                <span className="info-label">Email</span>
+                                <span className="info-value">{doctorData.email || 'N/A'}</span>
+                            </div>
+                        </div>
+                        <div className="info-item full-width">
+                            <div className="info-icon"><FiMapPin /></div>
+                            <div className="info-content">
+                                <span className="info-label">Address</span>
+                                <span className="info-value">{doctorData.address || 'N/A'}</span>
+                            </div>
+                        </div>
+                    </div>
+                </motion.div>
+
+                <motion.div className="info-section" variants={itemVariants}>
+                    <h3 className="section-title">Professional Information</h3>
+                    <div className="info-grid">
+                        <div className="info-item">
+                            <div className="info-icon"><FiActivity /></div>
+                            <div className="info-content">
+                                <span className="info-label">Specialization</span>
+                                <span className="info-value">{doctorData.specialization || 'N/A'}</span>
+                            </div>
+                        </div>
+                        <div className="info-item">
+                            <div className="info-icon"><FiCalendar /></div>
+                            <div className="info-content">
+                                <span className="info-label">Experience</span>
+                                <span className="info-value">{doctorData.experience || 'N/A'} years</span>
+                            </div>
+                        </div>
+                    </div>
+                </motion.div>
             </div>
-            <div className="infoGrid">
-                <div className="infoItem">
-                    <strong>Name:</strong> {doctorData.name || 'N/A'}
-                </div>
-                <div className="infoItem">
-                    <strong>Age:</strong> {doctorData.age || 'N/A'}
-                </div>
-                <div className="infoItem">
-                    <strong>Gender:</strong> {doctorData.gender || 'N/A'}
-                </div>
-                <div className="infoItem">
-                    <strong>Birthdate:</strong> {doctorData.birthdate || 'N/A'}
-                </div>
-                <div className="infoItem">
-                    <strong>Contact Info:</strong> {doctorData.contact_info || 'N/A'}
-                </div>
-                <div className="infoItem">
-                    <strong>Address:</strong> {doctorData.address || 'N/A'}
-                </div>
-                <div className="infoItem">
-                    <strong>Specialization:</strong> {doctorData.specialization || 'N/A'}
-                </div>
-            </div>
-        </div>
+        </motion.div>
     );
 }
 

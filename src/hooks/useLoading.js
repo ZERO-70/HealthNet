@@ -1,44 +1,37 @@
 import { useState, useCallback } from 'react';
 
 /**
- * Custom React hook to manage loading state for async operations.
- *
- * @param {boolean} [initialLoading=false] - Optional initial loading state.
- * @returns {{
- *   loading: boolean,
- *   withLoading: <T>(fn: (...args: any[]) => Promise<T>, onError?: (e: any) => void) => (...args: any[]) => Promise<T>
- * }}
- *
- * Usage:
- *   const { loading, withLoading } = useLoading();
- *   const fetchWithLoading = withLoading(fetchData, handleError);
- *   useEffect(() => { fetchWithLoading(); }, []);
- *   // in JSX: {loading && <LoadingSpinner />}
+ * A custom hook for managing loading states and error handling in async operations
+ * @returns {Object} Object containing loading state and withLoading function
  */
-export function useLoading(initialLoading = false) {
-  const [loading, setLoading] = useState(initialLoading);
+export const useLoading = () => {
+  const [loading, setLoading] = useState(false);
 
   /**
-   * Wraps an async function to automatically manage loading state and handle errors.
-   * @param {Function} asyncFn - The async function to wrap.
-   * @param {Function} [onError] - Optional error handler.
-   * @returns {Function} - A function that manages loading and error state.
+   * Wraps an async function with loading state management
+   * @param {Function} asyncFunction - The async function to wrap
+   * @param {Function} onError - Optional error handler function
+   * @returns {Function} Wrapped function that manages loading state
    */
-  const withLoading = useCallback(
-    (asyncFn, onError) =>
-      async (...args) => {
-        setLoading(true);
-        try {
-          return await asyncFn(...args);
-        } catch (e) {
-          if (onError) onError(e);
-          else throw e;
-        } finally {
-          setLoading(false);
+  const withLoading = useCallback((asyncFunction, onError) => {
+    return async (...args) => {
+      setLoading(true);
+      try {
+        const result = await asyncFunction(...args);
+        return result;
+      } catch (error) {
+        console.error('Error in async operation:', error);
+        if (onError && typeof onError === 'function') {
+          onError(error);
         }
-      },
-    []
-  );
+        return null;
+      } finally {
+        setLoading(false);
+      }
+    };
+  }, []);
 
   return { loading, withLoading };
-}
+};
+
+export default useLoading;

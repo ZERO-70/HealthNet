@@ -114,6 +114,13 @@ function StaffDepartmentManagement() {
         setLoading(true);
         try {
             const token = localStorage.getItem('authToken');
+            
+            if (!token) {
+                throw new Error('Authentication token is missing. Please log in again.');
+            }
+            
+            console.log('Fetching patients data...');
+            
             const response = await fetch('https://frozen-sands-51239-b849a8d5756e.herokuapp.com/patient', {
                 method: 'GET',
                 headers: {
@@ -122,11 +129,22 @@ function StaffDepartmentManagement() {
                 },
             });
 
-            if (!response.ok) throw new Error('Failed to fetch patient data');
+            console.log('Patient API response status:', response.status);
+            
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error('API Error Response:', errorText);
+                throw new Error(`Failed to fetch patient data: ${response.status} ${errorText}`);
+            }
+
             const data = await response.json();
+            console.log('Patients data fetched successfully:', data.length, 'patients');
             setPatientList(data);
+            setErrorMessage(''); // Clear any previous error messages on success
         } catch (error) {
+            console.error('Error in fetchPatients:', error);
             setErrorMessage('Error fetching patient data: ' + error.message);
+            setPatientList([]); // Set empty array to avoid rendering issues
         } finally {
             setLoading(false);
         }

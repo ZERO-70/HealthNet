@@ -1,22 +1,26 @@
-import React from 'react';
+import React, { memo } from 'react';
 import ReactDOM from 'react-dom';
-import '../index.css'; // spinner styles
+import '../styles/LoadingSpinner.css'; // Updated style path
 
 /**
  * LoadingSpinner displays a centered loading spinner overlay.
  *
  * Usage:
  *   <LoadingSpinner />
- *
- * Styles are defined in index.css (spinner-overlay, spinner).
  */
 const LoadingSpinner = () => {
   const overlay = (
-    <div className="spinner-overlay">
-      <div className="spinner" />
+    <div className="spinner-container">
+      <div className="spinner-ring">
+        <div></div>
+        <div></div>
+        <div></div>
+        <div></div>
+      </div>
     </div>
   );
   return ReactDOM.createPortal(overlay, document.body);
 };
 
-export default LoadingSpinner;
+// Using memo to prevent unnecessary re-renders
+export default memo(LoadingSpinner);

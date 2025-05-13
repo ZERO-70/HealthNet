@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import '../styles/PatientAppointments.css'; // Custom CSS for styling
 import LoadingSpinner from './LoadingSpinner';
 import { useLoading } from '../hooks/useLoading';
@@ -43,7 +43,7 @@ function PatientAppointments() {
         }
     };
 
-    const fetchAppointments = async () => {
+    const fetchAppointments = useCallback(async () => {
         try {
             const token = localStorage.getItem('authToken');
             if (!token) {
@@ -86,11 +86,11 @@ function PatientAppointments() {
             console.error('Error fetching appointments:', error);
             setErrorMessage(error.message);
         }
-    };
+    }, []);
 
     useEffect(() => {
         withLoading(fetchAppointments)();
-    }, [withLoading]);
+    }, [withLoading, fetchAppointments]);
 
     if (errorMessage) {
         return <p className="errorMessage">{errorMessage}</p>;
